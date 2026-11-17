@@ -42,9 +42,11 @@ def test_checks_catch_inconsistent_filing():
     assert "revenue_missing" in checks({k: v for k, v in LIASSE.items() if k != "FL"})
 
 
-def test_cutoff_is_18_months():
-    assert K.cutoff_date(dt.date(2026, 11, 17)) == dt.date(2025, 5, 17)
-    assert K.cutoff_date(dt.date(2026, 8, 31)) == dt.date(2025, 2, 28)
+def test_cutoff_is_when_next_accounts_fall_due():
+    # Rule changed on purpose (18 months -> legal deadline 12 + 6 + 2 = 20 months). Recomputed by hand:
+    # 17 Nov 2026 - 20 months = 17 Mar 2025 ; 31 Oct 2026 - 20 months = 28 Feb 2025 (day clamped).
+    assert K.cutoff_date(dt.date(2026, 11, 17)) == dt.date(2025, 3, 17)
+    assert K.cutoff_date(dt.date(2026, 10, 31)) == dt.date(2025, 2, 28)
 
 
 def test_ecb_csv():
@@ -134,28 +136,37 @@ def test_sector_inputs_fallback():
     assert s["beta_u"] == 1.33 and s["de"] == pytest.approx(0.1356) and s["ev_ebitda"] == 16.22
 
 
-def test_load_filings_sql(tmp_path):
-    """Run the real SQL on a small local parquet with the same schema as the data.gouv file."""
+def test_parquet_candidates_and_selection(tmp_path):
+    """Real SQL on a local parquet with the data.gouv schema, then the inclusion rule."""
     duckdb = pytest.importorskip("duckdb")
     p = tmp_path / "f.parquet"
     con = duckdb.connect()
     con.execute("CREATE TABLE t (siren VARCHAR, date_cloture_exercice DATE, type_bilan VARCHAR, confidentiality VARCHAR, liasse MAP(VARCHAR, INTEGER))")
+    good = {k: v for k, v in LIASSE.items()}
     rows = [
-        ("111111111", "2024-12-31", "C", "Public", {"FL": 9_000_000}),
-        ("111111111", "2025-12-31", "C", "Public", {"FL": 10_000_000}),    # recent, big -> kept with history
-        ("222222222", "2024-12-31", "C", "Public", {"FL": 50_000_000}),    # too old (before cutoff) -> out
-        ("333333333", "2025-12-31", "C", "Partiellement confidentiel", {"FL": 5_000_000}),  # confidential -> out
-        ("444444444", "2025-12-31", "S", "Public", {"FL": 5_000_000}),     # simplified regime -> out
-        ("555555555", "2025-12-31", "C", "Public", {"FL": 1_000_000}),     # below revenue floor -> out
+        ("111111111", "2024-12-31", "C", "Public", dict(good, FL=9_000_000)),
+        ("111111111", "2025-12-31", "C", "Public", good),                    # recent -> kept, with history
+        ("222222222", "2024-12-31", "C", "Public", good),                    # 2025 accounts due, missing -> out
+        ("333333333", "2025-12-31", "C", "Partiellement confidentiel", good),  # confidential -> not a candidate
+        ("444444444", "2025-12-31", "S", "Public", good),                    # simplified regime -> not a candidate
+        ("555555555", "2025-12-31", "C", "Public", dict(good, FL=1_000_000)),  # below candidate floor
+        ("666666666", "2025-12-31", "C", "Public", dict(good, GG=999_999)),  # inconsistent -> out
     ]
-    for s, d, tb, cf, l in rows:
-        con.execute("INSERT INTO t VALUES (?, ?, ?, ?, MAP(?, ?))", [s, d, tb, cf, list(l.keys()), list(l.values())])
+    for s_, d, tb, cf, l in rows:
+        con.execute("INSERT INTO t VALUES (?, ?, ?, ?, MAP(?, ?))", [s_, d, tb, cf, list(l.keys()), list(l.values())])
     con.execute(f"COPY t TO '{p}' (FORMAT parquet)")
-    from pipeline.companies import load_filings
-    out = load_filings(str(p), dt.date(2026, 11, 17), con=duckdb.connect(), log=lambda *_: None)
+    from pipeline.companies import load_parquet, build_statements
+    today = dt.date(2026, 11, 17)
+    f = load_parquet(str(p), today, con=duckdb.connect(), log=lambda *_: None)
+    assert sorted(f) == ["111111111", "222222222", "666666666"]
+    assert [d.isoformat() for d, _, _ in f["111111111"]] == ["2024-12-31", "2025-12-31"]
+    out, st = build_statements(f, today, log=lambda *_: None)
     assert list(out) == ["111111111"]
-    assert [d.isoformat() for d, _ in out["111111111"]] == ["2024-12-31", "2025-12-31"]
-    assert out["111111111"][-1][1]["FL"] == 10_000_000
+    assert st["rejected"] == {"latest_accounts_missing": 1, "accounting_checks": 1}
+    assert [h["closing"] for h in out["111111111"]["history"]] == ["2024-12-31", "2025-12-31"]
+    # with the API required, an open-data-only filing is not enough
+    out2, st2 = build_statements(f, today, require_api=True, log=lambda *_: None)
+    assert out2 == {} and st2["rejected"]["not_verified_by_inpi_api"] == 2
 
 
 def test_sirene_join_and_privacy(tmp_path, monkeypatch):

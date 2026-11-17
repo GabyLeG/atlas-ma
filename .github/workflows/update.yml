@@ -1,5 +1,5 @@
 # Rebuilds the data every night from the public sources and publishes the site on GitHub Pages.
-# One-time setup: Settings > Pages > Source: "GitHub Actions".
+# One-time setup: Settings > Pages > Source: "GitHub Actions"; secrets INPI_USERNAME and INPI_PASSWORD.
 # If a source fails, the job fails and the previous version of the site stays online.
 name: Mise à jour nocturne
 on:
@@ -32,6 +32,10 @@ jobs:
       - name: Tests
         run: python -m pytest -q
       - name: Build data from public sources
+        env:
+          # Free INPI account (data.inpi.fr), stored in Settings > Secrets and variables > Actions. Never in the code.
+          INPI_USERNAME: ${{ secrets.INPI_USERNAME }}
+          INPI_PASSWORD: ${{ secrets.INPI_PASSWORD }}
         run: python -m pipeline.build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

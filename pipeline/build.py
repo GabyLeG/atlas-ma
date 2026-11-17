@@ -116,7 +116,7 @@ def assemble(companies, ids, mkt, sec, today, stats, sample=False, log=print):
         row = {
             "siren": siren, "name": idn["name"], "naf": idn["naf"], "div": div, "industry": industry,
             "dep": idn.get("dep"), "commune": idn.get("commune"), "lat": idn.get("lat"), "lon": idn.get("lon"),
-            "closing": co["closing"], "size": idn.get("size"), "created": (idn.get("created") or "")[:4],
+            "closing": co["closing"], "filed": (co.get("proof") or {}).get("filed"), "size": idn.get("size"), "created": (idn.get("created") or "")[:4],
             "revenue": c["revenue"], "ebitda": c["ebitda"], "margin": c["ebitda"] / c["revenue"],
             "growth": v["dcf"]["g0"], "net_debt": v["net_debt"], "ev_dcf": v["ev_dcf"], "ev_mult": v["ev_mult"],
             "ev": v["ev"], "equity": v["equity"], "ev_ebitda": (v["ev"] / c["ebitda"]) if v["ev"] and c["ebitda"] > 0 else None,
@@ -128,7 +128,8 @@ def assemble(companies, ids, mkt, sec, today, stats, sample=False, log=print):
         }
         rows.append(row)
         by_div.setdefault(div, []).append(row)
-        details.setdefault(siren[:3], {})[siren] = [[h["closing"]] + [k(h[f]) for f in DETAIL_FIELDS] for h in co["history"]]
+        details.setdefault(siren[:3], {})[siren] = {"h": [[h["closing"]] + [k(h[f]) for f in DETAIL_FIELDS] for h in co["history"]],
+                                                     "p": co.get("proof") or {}}
     sector_table = {}
     for div, rs in by_div.items():
         med = median([r["margin"] for r in rs])
@@ -146,7 +147,7 @@ def assemble(companies, ids, mkt, sec, today, stats, sample=False, log=print):
         "s": [r["siren"] for r in rows], "n": [r["name"] for r in rows], "naf": [r["naf"] for r in rows],
         "d": [r["div"] for r in rows], "ind": [r["industry"] for r in rows], "dep": [r["dep"] for r in rows],
         "c": [r["commune"] for r in rows], "la": [r["lat"] for r in rows], "lo": [r["lon"] for r in rows],
-        "cl": [r["closing"] for r in rows], "sz": [r["size"] for r in rows], "cr": [r["created"] for r in rows],
+        "cl": [r["closing"] for r in rows], "fd": [r["filed"] for r in rows], "sz": [r["size"] for r in rows], "cr": [r["created"] for r in rows],
         "r": [k(r["revenue"]) for r in rows], "e": [k(r["ebitda"]) for r in rows], "m": [r4(r["margin"]) for r in rows],
         "g": [r4(r["growth"]) for r in rows], "nd": [k(r["net_debt"]) for r in rows],
         "evd": [k(r["ev_dcf"]) for r in rows], "evm": [k(r["ev_mult"]) for r in rows], "ev": [k(r["ev"]) for r in rows],
@@ -156,7 +157,8 @@ def assemble(companies, ids, mkt, sec, today, stats, sample=False, log=print):
     meta = {
         "sample": sample, "built_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "today": today.isoformat(), "cutoff": K.cutoff_date(today).isoformat(),
-        "rule": {"max_account_age_months": K.MAX_ACCOUNT_AGE_MONTHS, "bilan_types": list(K.ACCEPTED_BILAN_TYPES),
+        "verification": stats.get("verification", "sample"),
+        "rule": {"months_until_next_accounts_due": K.MONTHS_UNTIL_NEXT_ACCOUNTS_DUE, "bilan_types": list(K.ACCEPTED_BILAN_TYPES),
                  "confidentiality": list(K.ACCEPTED_CONFIDENTIALITY), "min_revenue": K.MIN_REVENUE_EUR},
         "count": len(rows), "stats": stats,
         "market": {"rates": mkt["rates"], "erp": mkt["erp"], "ratings": mkt["ratings"],
@@ -238,7 +240,9 @@ def sample_data(n=1600, seed=7):
                          "equity": yr_rev * rnd.uniform(0.15, 0.5), "fin_debt": debt, "cash": cash,
                          "bfr": yr_rev * rnd.uniform(0.0, 0.25), "fixed_assets_net": yr_rev * rnd.uniform(0.05, 0.6),
                          "total_assets": yr_rev * rnd.uniform(0.6, 1.2), "wages": yr_rev * rnd.uniform(0.2, 0.45)})
-        companies[siren] = {"closing": hist[-1]["closing"], "history": hist, "latest": {k2: v for k2, v in hist[-1].items() if k2 != "closing"}}
+        companies[siren] = {"closing": hist[-1]["closing"], "history": hist,
+                            "proof": {"source": "sample", "closing": hist[-1]["closing"], "filed": "2026-06-30", "months": "12", "entry_code": "0",
+                                      "checks": ["operating_income_sum", "operating_charges_sum", "operating_result", "balance_sheet", "net_income_bs_vs_pl"]}, "latest": {k2: v for k2, v in hist[-1].items() if k2 != "closing"}}
         code, nom, lon, lat = dep
         ids[siren] = {"name": f"Société fictive {i + 1:04d}", "naf": f"{div}.{rnd.randint(10, 99)}Z", "created": f"{rnd.randint(1960, 2019)}-01-01",
                       "size": rnd.choice(["12", "21", "22", "31", "32", "41"]), "dep": code, "commune": nom,
@@ -263,12 +267,21 @@ def main(argv=None):
         stats = {"note": "données fictives"}
     else:
         from . import companies as C
+        from . import inpi
         from . import sirene as S
         con = C.connect()
-        filings = C.load_filings(a.detail_parquet, today, con)
-        companies, stats = C.build_statements(filings)
+        filings = C.load_parquet(a.detail_parquet, today, con)
+        client = inpi.Client.from_env()
+        if client:
+            api_stats = C.add_inpi(filings, client, today)   # any API failure stops the build: the last good site stays online
+        else:
+            print("[inpi] WARNING: INPI_USERNAME / INPI_PASSWORD not set: latest accounts limited to the open-data file")
+            api_stats = None
+        companies, stats = C.build_statements(filings, today, require_api=bool(client) and K.REQUIRE_INPI_API)
+        stats["inpi_api"] = api_stats
+        stats["verification"] = "inpi_api" if client else "open_data"
         if not companies:
-            print("[build] ERROR: no company passed the filters; see the check failure counts above", file=sys.stderr)
+            print("[build] ERROR: no company passed the filters; see the rejection counts above", file=sys.stderr)
             return 2
         ids = S.load(con, companies.keys())
     meta, cols, details = assemble(companies, ids, mkt, sec, today, stats, sample=a.sample)

@@ -10,15 +10,18 @@ WEB = ROOT / "web"
 SITE = ROOT / "site"
 CACHE = Path(os.environ.get("ATLAS_CACHE", ROOT / ".cache"))
 
-# ---- Inclusion rule (the user's requirement: only companies with up-to-date, complete accounts) ----
-# A company is kept only if its latest closed financial year ended less than MAX_ACCOUNT_AGE_MONTHS ago,
-# its accounts are public (not confidential), filed under the full regime (type_bilan "C") and pass
-# the accounting checks in liasse.py.
-MAX_ACCOUNT_AGE_MONTHS = 18
+# ---- Inclusion rule: an M&A buyer will ask for the latest accounts, so a company is shown only if
+# the latest accounts that are legally due have been filed and are public, complete and consistent.
+# French law: accounts approved within 6 months of closing, filed within 1 month of approval (2 if filed
+# online). So the accounts of a year closing on date D are due by D + 8 months, and a company whose last
+# closing is older than 12 + 8 = 20 months is missing accounts it should have filed.
+MONTHS_UNTIL_NEXT_ACCOUNTS_DUE = 20
 ACCEPTED_BILAN_TYPES = ("C",)          # C = régime réel normal (full liasse 2050-2053)
 ACCEPTED_CONFIDENTIALITY = ("Public",)
 MIN_REVENUE_EUR = 2_000_000            # M&A universe floor; smaller firms are rarely acquisition targets
+CANDIDATE_MIN_REVENUE = 1_500_000      # lower bar on the previous year, to catch firms that grew past 2 M€
 HISTORY_YEARS = 4                      # past closings kept for growth and charts
+REQUIRE_INPI_API = True                # when INPI credentials are set, the latest accounts must come from the API
 
 # ---- Valuation assumptions (all editable in the app; these are the defaults) ----
 TAX_RATE = 0.25                        # French corporate income tax (IS), standard rate
@@ -41,9 +44,9 @@ TODAY = dt.date.fromisoformat(os.environ["ATLAS_TODAY"]) if os.environ.get("ATLA
 
 
 def cutoff_date(today: dt.date | None = None) -> dt.date:
-    """Oldest accepted closing date: today minus MAX_ACCOUNT_AGE_MONTHS (same day of month, clamped)."""
+    """Oldest accepted closing date: today minus MONTHS_UNTIL_NEXT_ACCOUNTS_DUE (same day of month, clamped)."""
     t = today or TODAY
-    m = t.month - MAX_ACCOUNT_AGE_MONTHS
+    m = t.month - MONTHS_UNTIL_NEXT_ACCOUNTS_DUE
     y = t.year + (m - 1) // 12
     m = (m - 1) % 12 + 1
     for d in (t.day, 28):

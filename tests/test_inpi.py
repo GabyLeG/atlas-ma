@@ -1,0 +1,68 @@
+"""INPI API format (documentation technique API comptes annuels v5): amounts are 15-digit strings,
+assets carry gross (m1) / depreciation (m2) / net (m3), the income statement total N is m3,
+liabilities and the 2053 page use m1 for year N."""
+from pipeline import inpi
+from pipeline.liasse import derive
+from tests.test_pipeline import LIASSE
+
+
+def z(v):
+    return ("-" if v < 0 else "") + str(abs(int(v))).zfill(15)
+
+
+def record(liasse=LIASSE, **ident):
+    l = liasse
+    assets = [("BJ", "BK"), ("BL", "BM"), ("BN", "BO"), ("BP", "BQ"), ("BR", "BS"), ("BT", "BU"), ("BX", "BY"), ("CD", "CE"), ("CF", "CG"), ("CO", "1A")]
+    p1 = [{"code": g, "m1": z(l.get(g, 0)), "m2": z(l.get(a, 0)), "m3": z(l.get(g, 0) - l.get(a, 0)), "m4": ""} for g, a in assets if g in l]
+    p2 = [{"code": c, "m1": z(v), "m2": "", "m3": "", "m4": ""} for c, v in l.items() if c[0] in "DE"]
+    p3 = [{"code": "FJ", "m1": z(l["FL"] - 1_000_000), "m2": z(1_000_000), "m3": z(l["FL"]), "m4": ""}]
+    p3 += [{"code": c, "m1": "", "m2": "", "m3": z(v), "m4": ""} for c, v in l.items() if c[0] in "FG" and c != "FL"]
+    p4 = [{"code": c, "m1": z(v), "m2": "", "m3": "", "m4": ""} for c, v in l.items() if c[0] == "H"]
+    idn = {"siren": "123456789", "dateClotureExercice": "2025-12-31", "dureeExerciceN": "12", "codeSaisie": "0",
+           "codeConfidentialite": "0", "codeDevise": "EUR", "codeTypeBilan": "C", "dateDepot": "2026-06-30"}
+    idn.update(ident)
+    return {"siren": "123456789", "dateDepot": idn["dateDepot"], "confidentiality": "Public", "deleted": False, "id": "abc",
+            "updatedAt": "2026-07-01T10:00:00+02:00", "dateCloture": idn["dateClotureExercice"], "typeBilan": idn["codeTypeBilan"],
+            "bilanSaisi": {"bilan": {"identite": idn, "detail": {"pages": [{"numero": 1, "liasses": p1}, {"numero": 2, "liasses": p2},
+                                                                            {"numero": 3, "liasses": p3}, {"numero": 4, "liasses": p4}]}}}}
+
+
+def test_amount_format():
+    assert inpi.amount("000000000001220") == 1220
+    assert inpi.amount("-000000001127414") == -1127414
+    assert inpi.amount("") is None
+
+
+def test_inpi_record_gives_same_statement_as_paper_form():
+    l = inpi.to_liasse(record())
+    assert l["FJ"] == 9_000_000 and l["FK"] == 1_000_000 and l["FL"] == 10_000_000
+    assert l["BK"] == 1_500_000 and l["CG"] == 0 and l["1A"] == 1_000_000
+    assert derive(l).to_dict() == derive(LIASSE).to_dict()
+    assert derive(l).checks_failed == []
+
+
+def test_reliability_rules():
+    ok = inpi.identity(record())
+    assert ok["filed"] == "2026-06-30" and inpi.reliability(ok) == []
+    assert inpi.reliability(inpi.identity(record(codeSaisie="1"))) == ["inpi_entry_anomaly"]
+    assert inpi.reliability(inpi.identity(record(dureeExerciceN="18"))) == ["not_12_months"]
+    assert "confidential" in inpi.reliability(inpi.identity(record(codeConfidentialite="2")))
+    assert "not_full_regime" in inpi.reliability(inpi.identity(record(codeTypeBilan="S")))
+
+
+def test_add_inpi_replaces_open_data_year_and_flags_problems():
+    import datetime as dt
+    from pipeline.companies import add_inpi, build_statements
+
+    class Fake:
+        calls = 3
+        def bilans_saisis(self, sirens, date_from):
+            yield record()
+            yield record(dateClotureExercice="2024-12-31", codeSaisie="1A")
+    f = {"123456789": [(dt.date(2024, 12, 31), dict(LIASSE, FL=9_000_000, FR=9_100_000), {"source": "open_data"})]}
+    st = add_inpi(f, Fake(), dt.date(2026, 11, 17), log=lambda *_: None)
+    assert st["used"] == 2 and st["problems"] == {"inpi_entry_anomaly": 1}
+    out, _ = build_statements(f, dt.date(2026, 11, 17), require_api=True, log=lambda *_: None)
+    co = out["123456789"]
+    assert co["proof"]["source"] == "inpi_api" and co["proof"]["filed"] == "2026-06-30"
+    assert [h["closing"] for h in co["history"]] == ["2025-12-31"]   # the flagged 2024 filing is left out of history

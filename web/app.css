@@ -200,3 +200,9 @@ dialog p, dialog li { color: var(--muted); }
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+ul.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+ul.checks li { display: flex; gap: 10px; align-items: flex-start; font-weight: 600; font-size: 13px; }
+ul.checks small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 1px; }
+.okc { flex: none; width: 20px; height: 20px; border-radius: 50%; background: color-mix(in srgb, var(--pos) 16%, transparent); color: var(--pos); display: grid; place-items: center; font-size: 12px; }
+a.ghost { text-decoration: none; color: var(--ink); display: inline-flex; align-items: center; }

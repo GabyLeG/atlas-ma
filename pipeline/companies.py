@@ -1,8 +1,15 @@
-"""Select companies with up-to-date, complete public accounts and rebuild their statements.
+"""Which companies make it into Atlas, and from which filing their numbers come.
 
-Source: "Données financières détaillées des entreprises" (Signaux Faibles, data.gouv), a parquet file
-of every INPI filing with the raw liasse as a map {code: amount}. Read with DuckDB over HTTP, so
-only the needed columns travel.
+1. Candidates: every company whose last public full-regime filing in the open-data parquet
+   ("Données financières détaillées des entreprises", data.gouv, INPI liasses) shows revenue above
+   CANDIDATE_MIN_REVENUE. The parquet also gives the older years used for growth.
+2. Latest accounts: the official INPI API, queried for those candidates (pipeline/inpi.py). It is
+   updated daily, so this year's filings are there, with their filing date and INPI quality code.
+3. Inclusion (an M&A buyer will ask for the latest accounts, so we only show a company if we have them):
+   - the latest accounts that are legally due must be filed: last closing on or after cutoff_date();
+   - the latest filing is public, full regime, 12 months, in euros, keyed in by INPI without anomaly;
+   - the numbers pass the accounting checks of liasse.py;
+   - revenue of at least MIN_REVENUE_EUR.
 """
 import datetime as dt
 
@@ -32,92 +39,121 @@ def describe(con, src):
     return con.execute(f"DESCRIBE SELECT * FROM read_parquet('{src}')").fetchall()
 
 
-def load_filings(src=K.DETAIL_PARQUET, today=None, con=None, log=print):
-    """Return {siren: [ (closing_date, liasse_dict), ...oldest→latest ]} for companies whose latest
-    accepted filing closed after the cutoff. src may be a URL or a local parquet path."""
+def load_parquet(src=K.DETAIL_PARQUET, today=None, con=None, log=print):
+    """{siren: [(closing, liasse, meta), ...]} for candidate companies (open-data history)."""
     con = con or connect()
     today = today or K.TODAY
-    cutoff = K.cutoff_date(today)
-    oldest = dt.date(cutoff.year - K.HISTORY_YEARS, cutoff.month, 1)
+    oldest = dt.date(today.year - K.HISTORY_YEARS - 1, today.month, 1)
     cols = {name: typ for name, typ, *_ in describe(con, src)}
-    log(f"[filings] schema: {cols}")
-    need = {"siren", "date_cloture_exercice", "type_bilan", "liasse"}
-    missing = need - set(cols)
+    log(f"[parquet] schema: {cols}")
+    missing = {"siren", "date_cloture_exercice", "type_bilan", "liasse"} - set(cols)
     if missing:
         raise RuntimeError(f"Colonnes absentes du parquet: {missing}. Schéma reçu: {cols}")
     conf = "confidentiality" if "confidentiality" in cols else None
     types = ",".join(f"'{t}'" for t in K.ACCEPTED_BILAN_TYPES)
     confs = ",".join(f"'{c}'" for c in K.ACCEPTED_CONFIDENTIALITY)
-    where = [f"type_bilan IN ({types})",
-             f"CAST(date_cloture_exercice AS DATE) BETWEEN DATE '{oldest}' AND DATE '{today}'"]
+    where = [f"type_bilan IN ({types})", f"CAST(date_cloture_exercice AS DATE) BETWEEN DATE '{oldest}' AND DATE '{today}'"]
     if conf:
         where.append(f"{conf} IN ({confs})")
     get = _map_get(con)
-    rev = get.format(m="liasse", k="FL")
     codes = all_codes()
     codes_sql = ", ".join(f'{get.format(m="f.liasse", k=c)} AS "c_{c}"' for c in codes)
-    sql = f"""
-      WITH f AS (
-        SELECT siren, CAST(date_cloture_exercice AS DATE) AS d, liasse
-        FROM read_parquet('{src}') WHERE {' AND '.join(where)}
-      ),
-      latest AS (SELECT siren, max(d) AS dl, arg_max(liasse, d) AS ll FROM f GROUP BY siren),
-      keep AS (SELECT siren FROM latest
-               WHERE dl >= DATE '{cutoff}' AND coalesce({rev.replace('liasse', 'll')}, 0) >= {K.MIN_REVENUE_EUR})
-      SELECT f.siren, f.d, {codes_sql}
-      FROM f JOIN keep USING (siren)
-      ORDER BY f.siren, f.d
-    """
-    log(f"[filings] cutoff {cutoff}, history from {oldest}")
+    rev = get.format(m="ll", k="FL")
     try:
-        conf_w = f"AND {conf} IN ({confs})" if conf else ""
         hist = con.execute(f"""SELECT strftime(CAST(date_cloture_exercice AS DATE), '%Y-%m') m, count(*) n
-            FROM read_parquet('{src}') WHERE type_bilan IN ({types}) {conf_w}
-              AND CAST(date_cloture_exercice AS DATE) BETWEEN DATE '{dt.date(today.year - 2, today.month, 1)}' AND DATE '{today}'
+            FROM read_parquet('{src}') WHERE {' AND '.join(where)}
+              AND CAST(date_cloture_exercice AS DATE) >= DATE '{dt.date(today.year - 2, today.month, 1)}'
             GROUP BY 1 ORDER BY 1""").fetchall()
-        log("[filings] dépôts publics au régime normal par mois de clôture (fraîcheur de la source): " + ", ".join(f"{m}:{n}" for m, n in hist))
+        log("[parquet] dépôts par mois de clôture (fraîcheur de la source open data): " + ", ".join(f"{m}:{n}" for m, n in hist))
     except Exception as e:  # noqa: BLE001
-        log(f"[filings] diagnostic de fraîcheur impossible ({e})")
+        log(f"[parquet] diagnostic de fraîcheur impossible ({e})")
+    sql = f"""
+      WITH f AS (SELECT siren, CAST(date_cloture_exercice AS DATE) AS d, liasse
+                 FROM read_parquet('{src}') WHERE {' AND '.join(where)}),
+      latest AS (SELECT siren, arg_max(liasse, d) AS ll FROM f GROUP BY siren),
+      keep AS (SELECT siren FROM latest WHERE coalesce({rev}, 0) >= {K.CANDIDATE_MIN_REVENUE})
+      SELECT f.siren, f.d, {codes_sql} FROM f JOIN keep USING (siren) ORDER BY f.siren, f.d
+    """
     import pandas as pd
     df = con.execute(sql).df()
     out = {}
-    names = list(codes)
     for row in df.itertuples(index=False):
-        l = {}
-        for code, v in zip(names, row[2:]):
-            if not pd.isna(v):                    # NULL: the line is blank in the filing
-                l[code] = float(v)
+        l = {code: float(v) for code, v in zip(codes, row[2:]) if not pd.isna(v)}
         d = row[1].date() if hasattr(row[1], "hour") else row[1]
-        out.setdefault(str(row[0]).zfill(9), []).append((d, l))
-    log(f"[filings] {len(out)} companies with a closing on or after {cutoff} and revenue ≥ {K.MIN_REVENUE_EUR:,} €")
+        out.setdefault(str(row[0]).zfill(9), []).append((d, l, {"source": "open_data"}))
+    log(f"[parquet] {len(out)} candidates (last public full-regime revenue ≥ {K.CANDIDATE_MIN_REVENUE:,.0f} €)")
     return out
 
 
-def build_statements(filings, log=print):
-    """Derive statements, keep companies whose latest filing passes the accounting checks.
-    Returns ({siren: {"history": [...], "latest": {...}}}, stats)."""
-    stats = {"companies_in": len(filings), "kept": 0, "rejected_latest": 0, "check_failures": {}}
+def add_inpi(filings, client, today=None, log=print):
+    """Merge the INPI API filings into `filings`. Returns stats."""
+    from . import inpi
+    today = today or K.TODAY
+    date_from = dt.date(today.year - 2, today.month, 1).isoformat()
+    stats = {"records": 0, "used": 0, "problems": {}}
+    best = {}
+    for rec in client.bilans_saisis(sorted(filings), date_from):
+        stats["records"] += 1
+        ident = inpi.identity(rec)
+        if ident["siren"] not in filings or not ident["closing"] or ident["type"] != "C":
+            continue
+        key = (ident["siren"], ident["closing"])
+        if key in best and best[key][0]["updated"] >= ident["updated"]:
+            continue
+        best[key] = (ident, rec)
+    for (siren, closing), (ident, rec) in best.items():
+        probs = inpi.reliability(ident)
+        for p in probs:
+            stats["problems"][p] = stats["problems"].get(p, 0) + 1
+        d = dt.date.fromisoformat(closing[:10])
+        meta = {"source": "inpi_api", "filed": ident["filed"], "inpi_id": ident["id"], "entry_code": ident["entry_code"],
+                "months": ident["months"], "problems": probs}
+        rows = [r for r in filings[siren] if r[0] != d]     # the API version replaces the open-data one
+        rows.append((d, inpi.to_liasse(rec), meta))
+        filings[siren] = sorted(rows, key=lambda r: r[0])
+        stats["used"] += 1
+    stats["calls"] = client.calls
+    log(f"[inpi] {stats['records']} records, {stats['used']} filings merged, {client.calls} calls; problems: {stats['problems']}")
+    return stats
+
+
+def build_statements(filings, today=None, require_api=False, log=print):
+    """Apply the inclusion rule. Returns ({siren: {"closing", "history", "latest", "proof"}}, stats)."""
+    today = today or K.TODAY
+    cutoff = K.cutoff_date(today)
+    stats = {"candidates": len(filings), "kept": 0, "cutoff": cutoff.isoformat(), "rejected": {}, "check_failures": {}}
+    rej = stats["rejected"]
     out = {}
     for siren, rows in filings.items():
         hist = []
-        seen = set()
-        for d, l in rows:
-            if d in seen:
-                continue
-            seen.add(d)
+        for d, l, meta in rows:
             s = derive(l)
             for c in s.checks_failed:
                 stats["check_failures"][c] = stats["check_failures"].get(c, 0) + 1
-            hist.append((d, s))
-        d_last, s_last = hist[-1]
-        if not usable(s_last):
-            stats["rejected_latest"] += 1
+            hist.append((d, s, meta))
+        d_last, s_last, m_last = hist[-1]
+        reason = None
+        if d_last < cutoff:
+            reason = "latest_accounts_missing"        # newer accounts are legally due but not filed (or not yet keyed in)
+        elif require_api and m_last["source"] != "inpi_api":
+            reason = "not_verified_by_inpi_api"
+        elif m_last.get("problems"):
+            reason = m_last["problems"][0]
+        elif not usable(s_last):
+            reason = "accounting_checks"
+        elif s_last.revenue < K.MIN_REVENUE_EUR:
+            reason = "below_revenue_floor"
+        if reason:
+            rej[reason] = rej.get(reason, 0) + 1
             continue
-        clean = [(d, s) for d, s in hist if usable(s)]
-        out[siren] = {"closing": d_last.isoformat(),
-                      "history": [{"closing": d.isoformat(), **s.to_dict()} for d, s in clean],
+        clean = [(d, s, m) for d, s, m in hist if usable(s) and not m.get("problems")]
+        proof = {"source": m_last["source"], "closing": d_last.isoformat(), "filed": m_last.get("filed"),
+                 "inpi_id": m_last.get("inpi_id"), "entry_code": m_last.get("entry_code"), "months": m_last.get("months"),
+                 "checks": ["operating_income_sum", "operating_charges_sum", "operating_result", "balance_sheet", "net_income_bs_vs_pl"]}
+        out[siren] = {"closing": d_last.isoformat(), "proof": proof,
+                      "history": [{"closing": d.isoformat(), **s.to_dict()} for d, s, _ in clean],
                       "latest": s_last.to_dict()}
     stats["kept"] = len(out)
-    log(f"[filings] kept {stats['kept']} / {stats['companies_in']} (latest filing failing checks: {stats['rejected_latest']})")
-    log(f"[filings] check failures over all filings: {stats['check_failures']}")
+    log(f"[select] cutoff {cutoff}: kept {stats['kept']} / {stats['candidates']}; rejected: {rej}")
+    log(f"[select] accounting check failures over all filings: {stats['check_failures']}")
     return out, stats
