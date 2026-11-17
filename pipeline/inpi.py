@@ -77,7 +77,7 @@ def identity(record):
         "type": record.get("typeBilan") or ident.get("codeTypeBilan"),
         "confidentiality": record.get("confidentiality"),
         "confidentiality_code": str(ident.get("codeConfidentialite", "")).strip(),
-        "entry_code": str(ident.get("codeSaisie", "")).strip(),
+        "entry_code": str(ident.get("codeSaisie") or record.get("codeSaisie") or (record.get("bilanSaisi") or {}).get("codeSaisie") or "").strip(),
         "months": str(ident.get("dureeExerciceN", "")).strip().lstrip("0"),
         "currency": (ident.get("codeDevise") or "EUR").strip(),
         "deleted": bool(record.get("deleted")),
@@ -95,8 +95,9 @@ def reliability(ident):
         r.append("not_full_regime")
     if (ident["confidentiality"] and ident["confidentiality"] != "Public") or ident["confidentiality_code"] not in ("", "0"):
         r.append("confidential")
-    if ident["entry_code"] not in ("0",):
-        r.append("inpi_entry_anomaly")          # INPI flags inconsistencies or missing data (codeSaisie 1, 1A, ...)
+    code = ident["entry_code"].upper()
+    if code in ("1", "1A") or (code.isdigit() and 2 <= int(code) <= 24):
+        r.append("inpi_entry_anomaly")          # INPI flagged inconsistencies (1), missing data (1A) or did not key in the accounts (2-24)
     if ident["months"] not in ("12",):
         r.append("not_12_months")
     if ident["currency"] != "EUR":
@@ -105,9 +106,10 @@ def reliability(ident):
 
 
 class Client:
-    def __init__(self, username, password, log=print, pause=0.15):
+    def __init__(self, username, password, log=print, pause=0.05):
+        import threading
         self.u, self.p, self.log, self.pause = username, password, log, pause
-        self.token, self.calls = None, 0
+        self.token, self.calls, self._lock = None, 0, threading.Lock()
 
     @classmethod
     def from_env(cls, log=print):
@@ -123,20 +125,21 @@ class Client:
         self.calls += 1
 
     def get(self, path, params):
-        if not self.token:
-            self.login()
         url = BASE + path + "?" + urllib.parse.urlencode(params, doseq=True)
         for attempt in range(4):
             req = urllib.request.Request(url, headers={"Authorization": f"Bearer {self.token}", "User-Agent": UA, "Accept": "application/json"})
             try:
-                with urllib.request.urlopen(req, timeout=120) as r:
-                    self.calls += 1
+                with urllib.request.urlopen(req, timeout=90) as r:
+                    with self._lock:
+                        self.calls += 1
                     time.sleep(self.pause)
                     return json.loads(r.read() or b"[]"), r.headers.get("pagination-search-after")
             except urllib.error.HTTPError as e:
-                self.calls += 1
+                with self._lock:
+                    self.calls += 1
                 if e.code == 401 and attempt == 0:
-                    self.login()
+                    with self._lock:
+                        self.login()
                     continue
                 if e.code == 429:
                     raise RuntimeError("INPI quota reached (10,000 calls or 10,000 MB per day)") from e
@@ -144,26 +147,47 @@ class Client:
                     time.sleep(3 * (attempt + 1))
                     continue
                 raise
+            except (urllib.error.URLError, TimeoutError) as e:
+                if attempt < 3:
+                    time.sleep(3 * (attempt + 1))
+                    continue
+                raise RuntimeError(f"INPI unreachable: {e}") from e
         raise RuntimeError("INPI: no answer")
 
-    def bilans_saisis(self, sirens, date_from, max_calls=8000):
-        """Yield every keyed-in filing created or modified since date_from, for the given sirens."""
+    def _batch(self, batch, date_from, max_calls):
+        out, after = [], None
+        while True:
+            if self.calls >= max_calls:
+                return out, True
+            params = {"siren[]": batch, "dateFrom": date_from, "pageSize": 100}
+            if after:
+                params["searchAfter"] = after
+            data, nxt = self.get("/api/bilans-saisis", params)
+            items = data if isinstance(data, list) else (data.get("items") or data.get("results") or [])
+            out.extend(items)
+            if not nxt or len(items) < 100 or nxt == after:
+                return out, False
+            after = nxt
+
+    def bilans_saisis(self, sirens, date_from, max_calls=8000, workers=6):
+        """Yield every keyed-in filing created or modified since date_from, for the given sirens.
+        Batches of 100 sirens are fetched by `workers` threads in parallel (the daily quota is on calls, not speed)."""
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        if not self.token:
+            self.login()
         sirens = list(sirens)
-        for i in range(0, len(sirens), 100):
-            batch = sirens[i:i + 100]
-            after = None
-            while True:
-                if self.calls >= max_calls:
-                    self.log(f"[inpi] stopping at {self.calls} calls to stay under the daily quota")
-                    return
-                params = {"siren[]": batch, "dateFrom": date_from, "pageSize": 100}
-                if after:
-                    params["searchAfter"] = after
-                data, nxt = self.get("/api/bilans-saisis", params)
-                items = data if isinstance(data, list) else (data.get("items") or data.get("results") or [])
+        batches = [sirens[i:i + 100] for i in range(0, len(sirens), 100)]
+        t0, done = time.time(), 0
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            futs = [ex.submit(self._batch, b, date_from, max_calls) for b in batches]
+            for f in as_completed(futs):
+                items, capped = f.result()
+                done += 1
                 yield from items
-                if not nxt or len(items) < 100 or nxt == after:
-                    break
-                after = nxt
-            if (i // 100) % 50 == 0:
-                self.log(f"[inpi] {i + len(batch)}/{len(sirens)} sirens, {self.calls} calls")
+                if done % 100 == 0 or done == len(batches):
+                    self.log(f"[inpi] {done}/{len(batches)} batches, {self.calls} calls, {time.time() - t0:.0f}s")
+                if capped:
+                    self.log(f"[inpi] stopping at {self.calls} calls to stay under the daily quota")
+                    for g in futs:
+                        g.cancel()
+                    return

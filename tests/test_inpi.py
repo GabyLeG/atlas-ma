@@ -45,6 +45,9 @@ def test_reliability_rules():
     ok = inpi.identity(record())
     assert ok["filed"] == "2026-06-30" and inpi.reliability(ok) == []
     assert inpi.reliability(inpi.identity(record(codeSaisie="1"))) == ["inpi_entry_anomaly"]
+    assert inpi.reliability(inpi.identity(record(codeSaisie="1A"))) == ["inpi_entry_anomaly"]
+    assert inpi.reliability(inpi.identity(record(codeSaisie="12"))) == ["inpi_entry_anomaly"]   # not keyed in
+    assert inpi.reliability(inpi.identity(record(codeSaisie=""))) == []                        # field absent: rely on the accounting checks
     assert inpi.reliability(inpi.identity(record(dureeExerciceN="18"))) == ["not_12_months"]
     assert "confidential" in inpi.reliability(inpi.identity(record(codeConfidentialite="2")))
     assert "not_full_regime" in inpi.reliability(inpi.identity(record(codeTypeBilan="S")))

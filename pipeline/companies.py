@@ -90,11 +90,16 @@ def add_inpi(filings, client, today=None, log=print):
     from . import inpi
     today = today or K.TODAY
     date_from = dt.date(today.year - 2, today.month, 1).isoformat()
-    stats = {"records": 0, "used": 0, "problems": {}}
+    stats = {"records": 0, "used": 0, "problems": {}, "entry_codes": {}}
     best = {}
     for rec in client.bilans_saisis(sorted(filings), date_from):
         stats["records"] += 1
         ident = inpi.identity(rec)
+        ec = ident["entry_code"] or "(absent)"
+        stats["entry_codes"][ec] = stats["entry_codes"].get(ec, 0) + 1
+        if stats["records"] == 1:
+            idn = (((rec.get("bilanSaisi") or {}).get("bilan") or {}).get("identite")) or {}
+            log(f"[inpi] first record keys: {sorted(rec)}; identite keys: {sorted(idn)}")
         if ident["siren"] not in filings or not ident["closing"] or ident["type"] != "C":
             continue
         key = (ident["siren"], ident["closing"])
@@ -114,6 +119,7 @@ def add_inpi(filings, client, today=None, log=print):
         stats["used"] += 1
     stats["calls"] = client.calls
     log(f"[inpi] {stats['records']} records, {stats['used']} filings merged, {client.calls} calls; problems: {stats['problems']}")
+    log(f"[inpi] INPI entry codes (codeSaisie): {stats['entry_codes']}")
     return stats
 
 
