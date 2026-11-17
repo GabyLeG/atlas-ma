@@ -48,6 +48,10 @@ def test_reliability_rules():
     assert inpi.reliability(inpi.identity(record(codeSaisie="1A"))) == ["inpi_entry_anomaly"]
     assert inpi.reliability(inpi.identity(record(codeSaisie="12"))) == ["inpi_entry_anomaly"]   # not keyed in
     assert inpi.reliability(inpi.identity(record(codeSaisie=""))) == []                        # field absent: rely on the accounting checks
+    # real API values are zero-padded (seen in the first live run): '00' ok, '01' inconsistencies, '13' not keyed in
+    assert inpi.identity(record(codeSaisie="00"))["entry_code"] == "0" and inpi.reliability(inpi.identity(record(codeSaisie="00"))) == []
+    assert inpi.reliability(inpi.identity(record(codeSaisie="01"))) == ["inpi_entry_anomaly"]
+    assert inpi.reliability(inpi.identity(record(codeSaisie="13"))) == ["inpi_entry_anomaly"]
     assert inpi.reliability(inpi.identity(record(dureeExerciceN="18"))) == ["not_12_months"]
     assert "confidential" in inpi.reliability(inpi.identity(record(codeConfidentialite="2")))
     assert "not_full_regime" in inpi.reliability(inpi.identity(record(codeTypeBilan="S")))

@@ -169,7 +169,7 @@ def add_inpi(filings, client, today=None, log=print, cache_path=None):
             for p in probs:
                 stats["problems"][p] = stats["problems"].get(p, 0) + 1
             d = dt.date.fromisoformat(closing)
-            meta = {"source": "inpi_api", "filed": idn["filed"], "inpi_id": idn["id"], "entry_code": idn["entry_code"],
+            meta = {"source": "inpi_api", "filed": idn["filed"], "inpi_id": idn["id"], "entry_code": inpi.norm_code(idn["entry_code"]),
                     "months": idn["months"], "problems": probs}
             rows = [r for r in filings[siren] if r[0] != d]     # the API version replaces the open-data one
             rows.append((d, c["l"], meta))

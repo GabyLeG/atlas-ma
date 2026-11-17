@@ -68,6 +68,12 @@ def to_liasse(record):
     return out
 
 
+def norm_code(c):
+    """INPI codes come zero-padded ('00', '01', '13'); keep '1A' style codes as they are."""
+    c = str(c or "").strip().upper()
+    return str(int(c)) if c.isdigit() else c
+
+
 def identity(record):
     ident = ((((record.get("bilanSaisi") or {}).get("bilan") or {}).get("identite")) or {})
     return {
@@ -76,8 +82,8 @@ def identity(record):
         "filed": record.get("dateDepot") or ident.get("dateDepot"),
         "type": record.get("typeBilan") or ident.get("codeTypeBilan"),
         "confidentiality": record.get("confidentiality"),
-        "confidentiality_code": str(ident.get("codeConfidentialite", "")).strip(),
-        "entry_code": str(ident.get("codeSaisie") or record.get("codeSaisie") or (record.get("bilanSaisi") or {}).get("codeSaisie") or "").strip(),
+        "confidentiality_code": norm_code(ident.get("codeConfidentialite")),
+        "entry_code": norm_code(ident.get("codeSaisie") or record.get("codeSaisie") or (record.get("bilanSaisi") or {}).get("codeSaisie")),
         "months": str(ident.get("dureeExerciceN", "")).strip().lstrip("0"),
         "currency": (ident.get("codeDevise") or "EUR").strip(),
         "deleted": bool(record.get("deleted")),
@@ -93,9 +99,9 @@ def reliability(ident):
         r.append("deleted")
     if ident["type"] != "C":
         r.append("not_full_regime")
-    if (ident["confidentiality"] and ident["confidentiality"] != "Public") or ident["confidentiality_code"] not in ("", "0"):
+    if (ident["confidentiality"] and ident["confidentiality"] != "Public") or norm_code(ident["confidentiality_code"]) not in ("", "0"):
         r.append("confidential")
-    code = ident["entry_code"].upper()
+    code = norm_code(ident["entry_code"])           # also normalises codes cached before this fix
     if code in ("1", "1A") or (code.isdigit() and 2 <= int(code) <= 24):
         r.append("inpi_entry_anomaly")          # INPI flagged inconsistencies (1), missing data (1A) or did not key in the accounts (2-24)
     if ident["months"] not in ("12",):
