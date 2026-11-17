@@ -85,40 +85,102 @@ def load_parquet(src=K.DETAIL_PARQUET, today=None, con=None, log=print):
     return out
 
 
-def add_inpi(filings, client, today=None, log=print):
-    """Merge the INPI API filings into `filings`. Returns stats."""
+def _load_cache(path):
+    import gzip
+    import json
+    try:
+        with gzip.open(path, "rt") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def _save_cache(path, cache):
+    import gzip
+    import json
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    with gzip.open(tmp, "wt") as f:
+        json.dump(cache, f, separators=(",", ":"))
+    tmp.replace(path)
+
+
+def add_inpi(filings, client, today=None, log=print, cache_path=None):
+    """Merge the INPI API filings into `filings`, through a cache kept between runs (GitHub Actions cache).
+
+    The INPI quota is 10,000 calls or 10,000 MB per day, and a full download is ~10 GB. So:
+    - backfill: every candidate is fetched once since `window_from`; if the quota runs out the run stops
+      cleanly and the next night resumes where it stopped;
+    - afterwards, each night only fetches what changed since the last complete pass (a few MB).
+    """
     from . import inpi
+    from .liasse import all_codes
     today = today or K.TODAY
-    date_from = dt.date(today.year - 2, today.month, 1).isoformat()
-    stats = {"records": 0, "used": 0, "problems": {}, "entry_codes": {}}
-    best = {}
-    for rec in client.bilans_saisis(sorted(filings), date_from):
-        stats["records"] += 1
-        ident = inpi.identity(rec)
-        ec = ident["entry_code"] or "(absent)"
-        stats["entry_codes"][ec] = stats["entry_codes"].get(ec, 0) + 1
-        if stats["records"] == 1:
-            idn = (((rec.get("bilanSaisi") or {}).get("bilan") or {}).get("identite")) or {}
-            log(f"[inpi] first record keys: {sorted(rec)}; identite keys: {sorted(idn)}")
-        if ident["siren"] not in filings or not ident["closing"] or ident["type"] != "C":
-            continue
-        key = (ident["siren"], ident["closing"])
-        if key in best and best[key][0]["updated"] >= ident["updated"]:
-            continue
-        best[key] = (ident, rec)
-    for (siren, closing), (ident, rec) in best.items():
-        probs = inpi.reliability(ident)
-        for p in probs:
-            stats["problems"][p] = stats["problems"].get(p, 0) + 1
-        d = dt.date.fromisoformat(closing[:10])
-        meta = {"source": "inpi_api", "filed": ident["filed"], "inpi_id": ident["id"], "entry_code": ident["entry_code"],
-                "months": ident["months"], "problems": probs}
-        rows = [r for r in filings[siren] if r[0] != d]     # the API version replaces the open-data one
-        rows.append((d, inpi.to_liasse(rec), meta))
-        filings[siren] = sorted(rows, key=lambda r: r[0])
-        stats["used"] += 1
+    cache_path = cache_path or (K.CACHE / "inpi.json.gz")
+    cache = _load_cache(cache_path)
+    codes = set(all_codes())
+    window_from = cache.get("window_from") or K.cutoff_date(today).isoformat()
+    cache.setdefault("window_from", window_from)
+    recs = cache.setdefault("records", {})          # siren -> {closing: compact record}
+    done = set(cache.get("done", []))
+    cands = sorted(filings)
+    todo = [s for s in cands if s not in done]
+    stats = {"records": 0, "used": 0, "problems": {}, "entry_codes": {}, "backfill_todo": len(todo)}
+
+    def take(batch, items):
+        for rec in items:
+            stats["records"] += 1
+            c = inpi.compact(rec, codes)
+            idn = c["ident"]
+            if not idn["closing"] or idn["type"] != "C":
+                continue
+            by = recs.setdefault(idn["siren"], {})
+            old = by.get(idn["closing"][:10])
+            if old is None or old["ident"]["updated"] <= idn["updated"]:
+                by[idn["closing"][:10]] = c
+
+    try:
+        if todo:
+            log(f"[inpi] backfill: {len(todo)} companies not yet fetched since {window_from}")
+            cache.setdefault("backfill_started", today.isoformat())
+            for batch, items in client.batches(todo, window_from):
+                take(batch, items)
+                done.update(batch)
+            if not client.quota_hit and not [s for s in cands if s not in done]:
+                cache["updated_until"] = cache.pop("backfill_started", today.isoformat())
+        elif cache.get("updated_until"):
+            since = (dt.date.fromisoformat(cache["updated_until"]) - dt.timedelta(days=3)).isoformat()
+            log(f"[inpi] incremental: changes since {since}")
+            n = 0
+            for batch, items in client.batches(cands, since):
+                take(batch, items)
+                n += 1
+            if not client.quota_hit:
+                cache["updated_until"] = today.isoformat()
+    finally:
+        cache["done"] = sorted(done)
+        _save_cache(cache_path, cache)
+    for siren in cands:
+        for closing, c in (recs.get(siren) or {}).items():
+            idn = c["ident"]
+            ec = idn["entry_code"] or "(absent)"
+            stats["entry_codes"][ec] = stats["entry_codes"].get(ec, 0) + 1
+            probs = inpi.reliability(idn)
+            for p in probs:
+                stats["problems"][p] = stats["problems"].get(p, 0) + 1
+            d = dt.date.fromisoformat(closing)
+            meta = {"source": "inpi_api", "filed": idn["filed"], "inpi_id": idn["id"], "entry_code": idn["entry_code"],
+                    "months": idn["months"], "problems": probs}
+            rows = [r for r in filings[siren] if r[0] != d]     # the API version replaces the open-data one
+            rows.append((d, c["l"], meta))
+            filings[siren] = sorted(rows, key=lambda r: r[0])
+            stats["used"] += 1
     stats["calls"] = client.calls
-    log(f"[inpi] {stats['records']} records, {stats['used']} filings merged, {client.calls} calls; problems: {stats['problems']}")
+    stats["checked"] = sum(1 for s in cands if s in done)
+    stats["coverage"] = stats["checked"] / len(cands) if cands else 1.0
+    stats["quota_hit"] = bool(getattr(client, "quota_hit", False))
+    log(f"[inpi] {stats['records']} new records this run, {stats['used']} filings merged, {client.calls} calls; "
+        f"companies checked {stats['checked']}/{len(cands)}; problems: {stats['problems']}")
     log(f"[inpi] INPI entry codes (codeSaisie): {stats['entry_codes']}")
     return stats
 

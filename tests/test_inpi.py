@@ -59,13 +59,47 @@ def test_add_inpi_replaces_open_data_year_and_flags_problems():
 
     class Fake:
         calls = 3
-        def bilans_saisis(self, sirens, date_from):
-            yield record()
-            yield record(dateClotureExercice="2024-12-31", codeSaisie="1A")
+        quota_hit = False
+        def batches(self, sirens, date_from):
+            yield list(sirens), [record(), record(dateClotureExercice="2024-12-31", codeSaisie="1A")]
     f = {"123456789": [(dt.date(2024, 12, 31), dict(LIASSE, FL=9_000_000, FR=9_100_000), {"source": "open_data"})]}
-    st = add_inpi(f, Fake(), dt.date(2026, 11, 17), log=lambda *_: None)
+    import tempfile, pathlib
+    cache = pathlib.Path(tempfile.mkdtemp()) / "inpi.json.gz"
+    st = add_inpi(f, Fake(), dt.date(2026, 11, 17), log=lambda *_: None, cache_path=cache)
     assert st["used"] == 2 and st["problems"] == {"inpi_entry_anomaly": 1}
     out, _ = build_statements(f, dt.date(2026, 11, 17), require_api=True, log=lambda *_: None)
     co = out["123456789"]
     assert co["proof"]["source"] == "inpi_api" and co["proof"]["filed"] == "2026-06-30"
     assert [h["closing"] for h in co["history"]] == ["2025-12-31"]   # the flagged 2024 filing is left out of history
+
+
+def test_cache_resumes_after_quota(tmp_path):
+    import datetime as dt
+    from pipeline.companies import add_inpi
+    cache = tmp_path / "inpi.json.gz"
+    today = dt.date(2026, 11, 17)
+
+    class Quota:
+        calls, quota_hit = 1, False
+        def batches(self, sirens, date_from):
+            yield ["123456789"], [record()]
+            self.quota_hit = True                     # second batch never answered
+
+    class Full:
+        calls, quota_hit = 1, False
+        def __init__(self):
+            self.asked = []
+        def batches(self, sirens, date_from):
+            self.asked.append((list(sirens), date_from))
+            yield list(sirens), []
+
+    f = {"123456789": [], "987654321": []}
+    st = add_inpi(dict(f), Quota(), today, log=lambda *_: None, cache_path=cache)
+    assert st["checked"] == 1 and st["quota_hit"]
+    full = Full()
+    st2 = add_inpi(dict(f), full, today, log=lambda *_: None, cache_path=cache)
+    assert full.asked == [(["987654321"], "2025-03-17")]     # only the company not yet fetched
+    assert st2["checked"] == 2 and st2["used"] == 1           # the first company's filing came from the cache
+    full2 = Full()
+    add_inpi(dict(f), full2, dt.date(2026, 11, 18), log=lambda *_: None, cache_path=cache)
+    assert full2.asked == [(["123456789", "987654321"], "2026-11-14")]   # incremental, 3 days back

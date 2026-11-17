@@ -31,12 +31,24 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Tests
         run: python -m pytest -q
+      - name: Restore the INPI download cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache
+          key: inpi-${{ github.run_id }}
+          restore-keys: inpi-
       - name: Build data from public sources
         env:
           # Free INPI account (data.inpi.fr), stored in Settings > Secrets and variables > Actions. Never in the code.
           INPI_USERNAME: ${{ secrets.INPI_USERNAME }}
           INPI_PASSWORD: ${{ secrets.INPI_PASSWORD }}
         run: python -m pipeline.build
+      - name: Save the INPI download cache (even if the build failed, so tomorrow resumes from here)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache
+          key: inpi-${{ github.run_id }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

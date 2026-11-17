@@ -158,6 +158,7 @@ def assemble(companies, ids, mkt, sec, today, stats, sample=False, log=print):
         "sample": sample, "built_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "today": today.isoformat(), "cutoff": K.cutoff_date(today).isoformat(),
         "verification": stats.get("verification", "sample"),
+        "inpi_coverage": ((stats.get("inpi_api") or {}).get("coverage")),
         "rule": {"months_until_next_accounts_due": K.MONTHS_UNTIL_NEXT_ACCOUNTS_DUE, "bilan_types": list(K.ACCEPTED_BILAN_TYPES),
                  "confidentiality": list(K.ACCEPTED_CONFIDENTIALITY), "min_revenue": K.MIN_REVENUE_EUR},
         "count": len(rows), "stats": stats,

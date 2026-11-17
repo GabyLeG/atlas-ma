@@ -68,6 +68,10 @@
       chip("Euribor 3M", pct(r.euribor3m.value, 2) + " · " + r.euribor3m.date, r.euribor3m.live) +
       chip("Updated", date(META.built_at.slice(0, 10)));
     $("sampleBanner").hidden = !META.sample;
+    if (META.inpi_coverage !== null && META.inpi_coverage !== undefined && META.inpi_coverage < 0.999 && !META.sample) {
+      $("sampleBanner").hidden = false;
+      $("sampleBanner").textContent = `First download from the INPI API in progress: ${Math.round(META.inpi_coverage * 100)}% of candidate companies checked so far (INPI daily quota). Coverage completes over the next nights; only verified companies are shown.`;
+    }
     if (META.verification === "open_data" && !META.sample) {
       $("sampleBanner").hidden = false;
       $("sampleBanner").textContent = "Latest accounts come from the open-data file only (INPI API not connected): coverage of this year's filings is partial.";

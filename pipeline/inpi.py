@@ -105,6 +105,16 @@ def reliability(ident):
     return r
 
 
+class QuotaReached(RuntimeError):
+    """INPI daily quota (10,000 calls or 10,000 MB) used up: stop for today, resume tomorrow."""
+
+
+def compact(record, codes):
+    """What the pipeline keeps from a filing: identity fields and the liasse codes it reads (a few hundred bytes)."""
+    l = to_liasse(record)
+    return {"ident": identity(record), "l": {c: v for c, v in l.items() if c in codes}}
+
+
 class Client:
     def __init__(self, username, password, log=print, pause=0.05):
         import threading
@@ -142,7 +152,7 @@ class Client:
                         self.login()
                     continue
                 if e.code == 429:
-                    raise RuntimeError("INPI quota reached (10,000 calls or 10,000 MB per day)") from e
+                    raise QuotaReached("INPI quota reached (10,000 calls or 10,000 MB per day)") from e
                 if e.code >= 500 and attempt < 3:
                     time.sleep(3 * (attempt + 1))
                     continue
@@ -169,25 +179,41 @@ class Client:
                 return out, False
             after = nxt
 
-    def bilans_saisis(self, sirens, date_from, max_calls=8000, workers=6):
-        """Yield every keyed-in filing created or modified since date_from, for the given sirens.
-        Batches of 100 sirens are fetched by `workers` threads in parallel (the daily quota is on calls, not speed)."""
+    def batches(self, sirens, date_from, max_calls=8000, workers=4):
+        """Yield (batch_of_sirens, filings) for every batch of 100 sirens, for filings created or modified since
+        date_from. Stops cleanly (QuotaReached is swallowed, self.quota_hit set) when the daily quota is used up."""
         from concurrent.futures import ThreadPoolExecutor, as_completed
+        self.quota_hit = False
         if not self.token:
-            self.login()
+            try:
+                self.login()
+            except urllib.error.HTTPError as e:
+                if e.code != 429:
+                    raise
+                self.quota_hit = True
+                self.log("[inpi] daily quota already used up: nothing fetched this run")
+                return
         sirens = list(sirens)
         batches = [sirens[i:i + 100] for i in range(0, len(sirens), 100)]
         t0, done = time.time(), 0
-        with ThreadPoolExecutor(max_workers=workers) as ex:
-            futs = [ex.submit(self._batch, b, date_from, max_calls) for b in batches]
+        ex = ThreadPoolExecutor(max_workers=workers)
+        try:
+            futs = {ex.submit(self._batch, b, date_from, max_calls): b for b in batches}
             for f in as_completed(futs):
-                items, capped = f.result()
+                try:
+                    items, capped = f.result()
+                except QuotaReached:
+                    self.quota_hit = True
+                    self.log(f"[inpi] daily quota reached after {self.calls} calls: the rest resumes on the next run")
+                    break
                 done += 1
-                yield from items
+                if not capped:
+                    yield futs[f], items
                 if done % 100 == 0 or done == len(batches):
                     self.log(f"[inpi] {done}/{len(batches)} batches, {self.calls} calls, {time.time() - t0:.0f}s")
                 if capped:
+                    self.quota_hit = True
                     self.log(f"[inpi] stopping at {self.calls} calls to stay under the daily quota")
-                    for g in futs:
-                        g.cancel()
-                    return
+                    break
+        finally:
+            ex.shutdown(wait=False, cancel_futures=True)
