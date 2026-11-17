@@ -95,6 +95,7 @@ def load(con, sirens, ul_url=None, et_url=None, log=print):
             if c:
                 df.at[ix, "lon"], df.at[ix, "lat"] = c
         log(f"[sirene] {int(missing.sum())} sièges placés au centre de leur commune")
+    df = df.astype(object).where(df.notna(), None)   # pandas NaN -> None
     out = {}
     for r in df.itertuples(index=False):
         cc = str(r.commune_code or "")
@@ -102,7 +103,7 @@ def load(con, sirens, ul_url=None, et_url=None, log=print):
         out[str(r.siren).zfill(9)] = {
             "name": (r.name or r.sigle or "").strip() or None, "naf": r.naf, "created": str(r.created or "")[:10],
             "size": r.size, "cat": r.cat, "legal": str(r.legal), "commune": r.commune, "cp": r.cp, "dep": dep,
-            "lat": None if pd.isna(getattr(r, "lat", float("nan"))) else round(float(r.lat), 5),
-            "lon": None if pd.isna(getattr(r, "lon", float("nan"))) else round(float(r.lon), 5),
+            "lat": None if getattr(r, "lat", None) is None else round(float(r.lat), 5),
+            "lon": None if getattr(r, "lon", None) is None else round(float(r.lon), 5),
         }
     return out

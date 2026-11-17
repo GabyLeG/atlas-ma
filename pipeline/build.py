@@ -171,6 +171,17 @@ def assemble(companies, ids, mkt, sec, today, stats, sample=False, log=print):
     return meta, cols, details
 
 
+def clean(o):
+    """JSON for browsers: NaN/inf (pandas gaps) become null; JSON has no NaN."""
+    if isinstance(o, float):
+        return o if math.isfinite(o) else None
+    if isinstance(o, dict):
+        return {k2: clean(v) for k2, v in o.items()}
+    if isinstance(o, (list, tuple)):
+        return [clean(v) for v in o]
+    return o
+
+
 def write_site(meta, cols, details, log=print):
     out = K.SITE
     if out.exists():
@@ -180,7 +191,7 @@ def write_site(meta, cols, details, log=print):
         if f.is_file():
             shutil.copy(f, out / f.name)
     shutil.copy(K.DATA / "departements.geojson", out / "data" / "departements.json")
-    dump = lambda p, o: p.write_text(json.dumps(o, ensure_ascii=False, separators=(",", ":")))  # noqa: E731
+    dump = lambda p, o: p.write_text(json.dumps(clean(o), ensure_ascii=False, separators=(",", ":"), allow_nan=False))  # noqa: E731
     dump(out / "data" / "meta.json", meta)
     dump(out / "data" / "universe.json", cols)
     for prefix, d in details.items():

@@ -69,6 +69,15 @@ def load_filings(src=K.DETAIL_PARQUET, today=None, con=None, log=print):
       ORDER BY f.siren, f.d
     """
     log(f"[filings] cutoff {cutoff}, history from {oldest}")
+    try:
+        conf_w = f"AND {conf} IN ({confs})" if conf else ""
+        hist = con.execute(f"""SELECT strftime(CAST(date_cloture_exercice AS DATE), '%Y-%m') m, count(*) n
+            FROM read_parquet('{src}') WHERE type_bilan IN ({types}) {conf_w}
+              AND CAST(date_cloture_exercice AS DATE) BETWEEN DATE '{dt.date(today.year - 2, today.month, 1)}' AND DATE '{today}'
+            GROUP BY 1 ORDER BY 1""").fetchall()
+        log("[filings] dépôts publics au régime normal par mois de clôture (fraîcheur de la source): " + ", ".join(f"{m}:{n}" for m, n in hist))
+    except Exception as e:  # noqa: BLE001
+        log(f"[filings] diagnostic de fraîcheur impossible ({e})")
     import pandas as pd
     df = con.execute(sql).df()
     out = {}
