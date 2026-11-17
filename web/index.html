@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas M&amp;A</title>
+<meta name="description" content="Carte et valorisation des PME françaises à comptes publics récents : DCF, multiples d'EBITDA, test de LBO.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#carte" aria-label="Atlas, accueil">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 22c5-9 9 2 14-6s8-6 10-5" /><path d="M4 16c5-9 9 2 14-6s8-6 10-5" opacity=".55"/><path d="M4 28c5-9 9 2 14-6s8-6 10-5" opacity=".3"/><circle cx="18" cy="16" r="2.6"/></svg>
+    <span><b>Atlas</b><small>M&amp;A · PME françaises</small></span>
+  </a>
+  <nav class="tabs" aria-label="Vues">
+    <a href="#carte" data-view="map">Carte</a>
+    <a href="#liste" data-view="list">Liste</a>
+    <a href="#analyse" data-view="co">Analyse</a>
+  </nav>
+  <div class="fresh" id="fresh"></div>
+  <button class="ghost icon" id="methodBtn" aria-label="Méthode et sources">?</button>
+</header>
+<div class="sample" id="sampleBanner" hidden>Données fictives de démonstration. La version en ligne utilise les comptes réels déposés à l'INPI, mis à jour chaque nuit.</div>
+
+<main class="shell">
+  <aside class="filters" id="filters" aria-label="Filtres">
+    <div class="fhead"><h2>Filtres</h2><button class="link" id="resetBtn">Tout effacer</button></div>
+    <label class="field"><span>Société ou SIREN</span><input id="fSearch" type="search" placeholder="ex. 552 100 554" autocomplete="off"></label>
+    <div class="field"><span>Secteur</span><div class="chips" id="fMacro"></div>
+      <select id="fDiv" aria-label="Division NAF"><option value="">Toutes les divisions</option></select></div>
+    <div class="field two"><label><span>Région</span><select id="fReg"><option value="">France entière</option></select></label>
+      <label><span>Département</span><select id="fDep"><option value="">Tous</option></select></label></div>
+    <div class="field"><span>Chiffre d'affaires (M€)</span>
+      <div class="range2"><input id="fRmin" type="number" min="0" step="1" placeholder="min"><i>à</i><input id="fRmax" type="number" min="0" step="1" placeholder="max"></div>
+      <div class="chips small" id="fRpre"></div></div>
+    <label class="field slider"><span>Marge d'EBITDA min. <output id="oMargin"></output></span><input id="fMargin" type="range" min="-20" max="40" step="1" value="-20"></label>
+    <label class="field slider"><span>Croissance annuelle min. <output id="oGrowth"></output></span><input id="fGrowth" type="range" min="-5" max="20" step="1" value="-5"></label>
+    <label class="field slider"><span>VE / EBITDA max. <output id="oMult"></output></span><input id="fMult" type="range" min="2" max="25" step="0.5" value="25"></label>
+    <label class="field slider"><span>Score min. <output id="oScore"></output></span><input id="fScore" type="range" min="0" max="100" step="5" value="0"></label>
+    <label class="check"><input id="fPos" type="checkbox"> EBITDA positif uniquement</label>
+    <div class="count"><b id="count">0</b> sociétés <span id="countSub"></span></div>
+  </aside>
+
+  <section class="view" id="v-map" aria-label="Carte">
+    <div class="maptools">
+      <div class="seg" role="group" aria-label="Couleur des points">
+        <button data-color="sc" class="on">Score</button><button data-color="m">Marge</button><button data-color="g">Croissance</button><button data-color="x">VE/EBITDA</button>
+      </div>
+      <div class="seg" role="group" aria-label="Fond de carte">
+        <button data-fill="none" class="on">Points</button><button data-fill="count">Densité par département</button>
+      </div>
+    </div>
+    <div class="mapwrap" id="mapwrap">
+      <canvas id="map" aria-label="Carte des sociétés"></canvas>
+      <div class="tip" id="tip" hidden></div>
+      <div class="legend" id="legend"></div>
+      <div class="zoom"><button id="zin" aria-label="Zoom avant">+</button><button id="zout" aria-label="Zoom arrière">−</button><button id="zreset" aria-label="Recentrer">⤢</button></div>
+      <article class="card" id="pick" hidden></article>
+    </div>
+  </section>
+
+  <section class="view" id="v-list" aria-label="Liste" hidden>
+    <div class="summary" id="summary"></div>
+    <div class="tablebar"><span id="sortNote"></span><button class="ghost" id="csvBtn">Exporter la liste (CSV)</button></div>
+    <div class="table" id="table" role="table" aria-label="Sociétés"><div class="thead" id="thead" role="row"></div><div class="tbody" id="tbody"></div></div>
+  </section>
+
+  <section class="view" id="v-co" aria-label="Analyse" hidden>
+    <div id="co"></div>
+  </section>
+</main>
+
+<dialog id="method"><form method="dialog"><div id="methodBody"></div><button class="primary" value="close">Fermer</button></form></dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="valuation.js"></script>
+<script src="excel.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

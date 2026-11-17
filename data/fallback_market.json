@@ -1,0 +1,1393 @@
+{
+ "_doc": "Valeurs de repli, utilisées seulement si une source en ligne ne répond pas. La mise à jour automatique les remplace par les valeurs du jour.",
+ "rates": {
+  "euribor3m": {
+   "value": 0.02714,
+   "date": "2026-11-02",
+   "source": "BCE (repli)"
+  },
+  "oat10": {
+   "value": 0.0507,
+   "date": "2026-10-21",
+   "source": "Presse financière (Saxo, 21/10/2026) — repli"
+  }
+ },
+ "erp": {
+  "value": 0.042,
+  "date": "2026-07-01",
+  "source": "Damodaran, prime de risque des marchés matures (mise à jour du 1er juillet 2026)"
+ },
+ "betas": {
+  "source": "Damodaran, Betas by Sector (Global), janvier 2026 — repli (la mise à jour automatique utilise la table Europe)",
+  "date": "2026-01-09",
+  "region": "Global",
+  "by_industry": {
+   "Advertising": {
+    "firms": 419,
+    "beta": 1.27,
+    "de": 0.40549999999999997,
+    "tax": 0.13470000000000001,
+    "beta_u": 0.98,
+    "cash_fv": 0.10039999999999999,
+    "beta_u_cash": 1.09
+   },
+   "Aerospace/Defense": {
+    "firms": 319,
+    "beta": 1.23,
+    "de": 0.13,
+    "tax": 0.1093,
+    "beta_u": 1.12,
+    "cash_fv": 0.0382,
+    "beta_u_cash": 1.17
+   },
+   "Air Transport": {
+    "firms": 150,
+    "beta": 0.99,
+    "de": 0.7889,
+    "tax": 0.1462,
+    "beta_u": 0.62,
+    "cash_fv": 0.0885,
+    "beta_u_cash": 0.68
+   },
+   "Apparel": {
+    "firms": 1207,
+    "beta": 0.76,
+    "de": 0.187,
+    "tax": 0.1524,
+    "beta_u": 0.67,
+    "cash_fv": 0.051399999999999994,
+    "beta_u_cash": 0.71
+   },
+   "Auto & Truck": {
+    "firms": 165,
+    "beta": 1.41,
+    "de": 0.4781,
+    "tax": 0.1157,
+    "beta_u": 1.04,
+    "cash_fv": 0.0953,
+    "beta_u_cash": 1.15
+   },
+   "Auto Parts": {
+    "firms": 797,
+    "beta": 1.45,
+    "de": 0.278,
+    "tax": 0.1728,
+    "beta_u": 1.2,
+    "cash_fv": 0.11289999999999999,
+    "beta_u_cash": 1.35
+   },
+   "Bank (Money Center)": {
+    "firms": 604,
+    "beta": 0.7,
+    "de": 2.1172,
+    "tax": 0.2159,
+    "beta_u": 0.27,
+    "cash_fv": 0.2548,
+    "beta_u_cash": 0.36
+   },
+   "Banks (Regional)": {
+    "firms": 825,
+    "beta": 0.51,
+    "de": 2.0228,
+    "tax": 0.18359999999999999,
+    "beta_u": 0.2,
+    "cash_fv": 0.3188,
+    "beta_u_cash": 0.3
+   },
+   "Beverage (Alcoholic)": {
+    "firms": 217,
+    "beta": 0.79,
+    "de": 0.2029,
+    "tax": 0.17620000000000002,
+    "beta_u": 0.69,
+    "cash_fv": 0.050499999999999996,
+    "beta_u_cash": 0.73
+   },
+   "Beverage (Soft)": {
+    "firms": 94,
+    "beta": 0.59,
+    "de": 0.18719999999999998,
+    "tax": 0.133,
+    "beta_u": 0.52,
+    "cash_fv": 0.0403,
+    "beta_u_cash": 0.54
+   },
+   "Broadcasting": {
+    "firms": 127,
+    "beta": 0.83,
+    "de": 0.5677,
+    "tax": 0.152,
+    "beta_u": 0.58,
+    "cash_fv": 0.10869999999999999,
+    "beta_u_cash": 0.66
+   },
+   "Brokerage & Investment Banking": {
+    "firms": 623,
+    "beta": 0.98,
+    "de": 1.7913999999999999,
+    "tax": 0.1537,
+    "beta_u": 0.42,
+    "cash_fv": 0.1394,
+    "beta_u_cash": 0.49
+   },
+   "Building Materials": {
+    "firms": 469,
+    "beta": 1.0,
+    "de": 0.2278,
+    "tax": 0.1672,
+    "beta_u": 0.86,
+    "cash_fv": 0.048600000000000004,
+    "beta_u_cash": 0.9
+   },
+   "Business & Consumer Services": {
+    "firms": 994,
+    "beta": 0.99,
+    "de": 0.2061,
+    "tax": 0.1582,
+    "beta_u": 0.86,
+    "cash_fv": 0.0533,
+    "beta_u_cash": 0.91
+   },
+   "Cable TV": {
+    "firms": 42,
+    "beta": 1.1,
+    "de": 1.2417,
+    "tax": 0.1002,
+    "beta_u": 0.57,
+    "cash_fv": 0.0363,
+    "beta_u_cash": 0.59
+   },
+   "Chemical (Basic)": {
+    "firms": 909,
+    "beta": 1.26,
+    "de": 0.5047999999999999,
+    "tax": 0.1472,
+    "beta_u": 0.91,
+    "cash_fv": 0.08960000000000001,
+    "beta_u_cash": 1.0
+   },
+   "Chemical (Diversified)": {
+    "firms": 63,
+    "beta": 1.17,
+    "de": 0.5252,
+    "tax": 0.2113,
+    "beta_u": 0.84,
+    "cash_fv": 0.077,
+    "beta_u_cash": 0.91
+   },
+   "Chemical (Specialty)": {
+    "firms": 952,
+    "beta": 1.15,
+    "de": 0.2352,
+    "tax": 0.1573,
+    "beta_u": 0.98,
+    "cash_fv": 0.058899999999999994,
+    "beta_u_cash": 1.04
+   },
+   "Coal & Related Energy": {
+    "firms": 212,
+    "beta": 1.14,
+    "de": 0.19899999999999998,
+    "tax": 0.1066,
+    "beta_u": 1.0,
+    "cash_fv": 0.1217,
+    "beta_u_cash": 1.13
+   },
+   "Computer Services": {
+    "firms": 1225,
+    "beta": 1.12,
+    "de": 0.1501,
+    "tax": 0.16579999999999998,
+    "beta_u": 1.0,
+    "cash_fv": 0.0629,
+    "beta_u_cash": 1.07
+   },
+   "Computers/Peripherals": {
+    "firms": 343,
+    "beta": 1.49,
+    "de": 0.061900000000000004,
+    "tax": 0.1293,
+    "beta_u": 1.42,
+    "cash_fv": 0.0325,
+    "beta_u_cash": 1.47
+   },
+   "Construction Supplies": {
+    "firms": 804,
+    "beta": 1.03,
+    "de": 0.30269999999999997,
+    "tax": 0.1672,
+    "beta_u": 0.84,
+    "cash_fv": 0.0795,
+    "beta_u_cash": 0.92
+   },
+   "Diversified": {
+    "firms": 329,
+    "beta": 0.8,
+    "de": 0.485,
+    "tax": 0.1518,
+    "beta_u": 0.59,
+    "cash_fv": 0.10279999999999999,
+    "beta_u_cash": 0.65
+   },
+   "Drugs (Biotechnology)": {
+    "firms": 1193,
+    "beta": 1.23,
+    "de": 0.1235,
+    "tax": 0.0208,
+    "beta_u": 1.13,
+    "cash_fv": 0.045599999999999995,
+    "beta_u_cash": 1.18
+   },
+   "Drugs (Pharmaceutical)": {
+    "firms": 1260,
+    "beta": 1.06,
+    "de": 0.1494,
+    "tax": 0.1035,
+    "beta_u": 0.96,
+    "cash_fv": 0.042800000000000005,
+    "beta_u_cash": 1.0
+   },
+   "Education": {
+    "firms": 281,
+    "beta": 0.81,
+    "de": 0.2861,
+    "tax": 0.14550000000000002,
+    "beta_u": 0.67,
+    "cash_fv": 0.1016,
+    "beta_u_cash": 0.74
+   },
+   "Electrical Equipment": {
+    "firms": 1158,
+    "beta": 1.37,
+    "de": 0.1374,
+    "tax": 0.122,
+    "beta_u": 1.25,
+    "cash_fv": 0.0708,
+    "beta_u_cash": 1.34
+   },
+   "Electronics (Consumer & Office)": {
+    "firms": 122,
+    "beta": 1.2,
+    "de": 0.16329999999999997,
+    "tax": 0.1328,
+    "beta_u": 1.07,
+    "cash_fv": 0.10529999999999999,
+    "beta_u_cash": 1.19
+   },
+   "Electronics (General)": {
+    "firms": 1481,
+    "beta": 1.6,
+    "de": 0.1417,
+    "tax": 0.1189,
+    "beta_u": 1.45,
+    "cash_fv": 0.0785,
+    "beta_u_cash": 1.57
+   },
+   "Engineering/Construction": {
+    "firms": 1390,
+    "beta": 1.0,
+    "de": 0.7655,
+    "tax": 0.1766,
+    "beta_u": 0.64,
+    "cash_fv": 0.161,
+    "beta_u_cash": 0.76
+   },
+   "Entertainment": {
+    "firms": 733,
+    "beta": 1.01,
+    "de": 0.1273,
+    "tax": 0.0803,
+    "beta_u": 0.92,
+    "cash_fv": 0.0583,
+    "beta_u_cash": 0.98
+   },
+   "Environmental & Waste Services": {
+    "firms": 397,
+    "beta": 1.1,
+    "de": 0.35700000000000004,
+    "tax": 0.128,
+    "beta_u": 0.87,
+    "cash_fv": 0.0418,
+    "beta_u_cash": 0.91
+   },
+   "Farming/Agriculture": {
+    "firms": 428,
+    "beta": 0.67,
+    "de": 0.5904,
+    "tax": 0.1563,
+    "beta_u": 0.47,
+    "cash_fv": 0.0562,
+    "beta_u_cash": 0.49
+   },
+   "Financial Svcs. (Non-bank & Insurance)": {
+    "firms": 1138,
+    "beta": 0.82,
+    "de": 2.6481,
+    "tax": 0.1591,
+    "beta_u": 0.28,
+    "cash_fv": 0.0625,
+    "beta_u_cash": 0.3
+   },
+   "Food Processing": {
+    "firms": 1450,
+    "beta": 0.67,
+    "de": 0.371,
+    "tax": 0.1635,
+    "beta_u": 0.53,
+    "cash_fv": 0.0582,
+    "beta_u_cash": 0.56
+   },
+   "Food Wholesalers": {
+    "firms": 183,
+    "beta": 0.68,
+    "de": 0.5824,
+    "tax": 0.1744,
+    "beta_u": 0.48,
+    "cash_fv": 0.0432,
+    "beta_u_cash": 0.5
+   },
+   "Furn/Home Furnishings": {
+    "firms": 383,
+    "beta": 0.97,
+    "de": 0.25730000000000003,
+    "tax": 0.1539,
+    "beta_u": 0.81,
+    "cash_fv": 0.135,
+    "beta_u_cash": 0.94
+   },
+   "Green & Renewable Energy": {
+    "firms": 258,
+    "beta": 0.84,
+    "de": 0.7143,
+    "tax": 0.11,
+    "beta_u": 0.55,
+    "cash_fv": 0.037200000000000004,
+    "beta_u_cash": 0.57
+   },
+   "Healthcare Products": {
+    "firms": 842,
+    "beta": 1.18,
+    "de": 0.1386,
+    "tax": 0.08449999999999999,
+    "beta_u": 1.07,
+    "cash_fv": 0.0406,
+    "beta_u_cash": 1.12
+   },
+   "Healthcare Support Services": {
+    "firms": 478,
+    "beta": 0.92,
+    "de": 0.38130000000000003,
+    "tax": 0.1462,
+    "beta_u": 0.71,
+    "cash_fv": 0.0837,
+    "beta_u_cash": 0.78
+   },
+   "Heathcare Information and Technology": {
+    "firms": 430,
+    "beta": 1.29,
+    "de": 0.1396,
+    "tax": 0.0786,
+    "beta_u": 1.17,
+    "cash_fv": 0.0323,
+    "beta_u_cash": 1.21
+   },
+   "Homebuilding": {
+    "firms": 160,
+    "beta": 0.96,
+    "de": 0.39899999999999997,
+    "tax": 0.1973,
+    "beta_u": 0.74,
+    "cash_fv": 0.1003,
+    "beta_u_cash": 0.82
+   },
+   "Hospitals/Healthcare Facilities": {
+    "firms": 249,
+    "beta": 0.76,
+    "de": 0.4658,
+    "tax": 0.18460000000000001,
+    "beta_u": 0.56,
+    "cash_fv": 0.0339,
+    "beta_u_cash": 0.58
+   },
+   "Hotel/Gaming": {
+    "firms": 656,
+    "beta": 0.8,
+    "de": 0.40240000000000004,
+    "tax": 0.1506,
+    "beta_u": 0.61,
+    "cash_fv": 0.0643,
+    "beta_u_cash": 0.66
+   },
+   "Household Products": {
+    "firms": 588,
+    "beta": 0.83,
+    "de": 0.1567,
+    "tax": 0.1311,
+    "beta_u": 0.74,
+    "cash_fv": 0.04,
+    "beta_u_cash": 0.77
+   },
+   "Information Services": {
+    "firms": 86,
+    "beta": 1.02,
+    "de": 0.31980000000000003,
+    "tax": 0.19820000000000002,
+    "beta_u": 0.83,
+    "cash_fv": 0.0541,
+    "beta_u_cash": 0.87
+   },
+   "Insurance (General)": {
+    "firms": 204,
+    "beta": 0.51,
+    "de": 0.3006,
+    "tax": 0.15380000000000002,
+    "beta_u": 0.42,
+    "cash_fv": 0.1191,
+    "beta_u_cash": 0.47
+   },
+   "Insurance (Life)": {
+    "firms": 143,
+    "beta": 0.8,
+    "de": 0.7513,
+    "tax": 0.1725,
+    "beta_u": 0.52,
+    "cash_fv": 0.3521,
+    "beta_u_cash": 0.79
+   },
+   "Insurance (Prop/Cas.)": {
+    "firms": 248,
+    "beta": 0.43,
+    "de": 0.1634,
+    "tax": 0.1938,
+    "beta_u": 0.38,
+    "cash_fv": 0.0666,
+    "beta_u_cash": 0.41
+   },
+   "Investments & Asset Management": {
+    "firms": 1315,
+    "beta": 0.75,
+    "de": 0.6034,
+    "tax": 0.0728,
+    "beta_u": 0.52,
+    "cash_fv": 0.08789999999999999,
+    "beta_u_cash": 0.57
+   },
+   "Machinery": {
+    "firms": 1553,
+    "beta": 1.37,
+    "de": 0.1356,
+    "tax": 0.15990000000000001,
+    "beta_u": 1.24,
+    "cash_fv": 0.0647,
+    "beta_u_cash": 1.33
+   },
+   "Metals & Mining": {
+    "firms": 1874,
+    "beta": 1.24,
+    "de": 0.2304,
+    "tax": 0.0437,
+    "beta_u": 1.05,
+    "cash_fv": 0.06280000000000001,
+    "beta_u_cash": 1.13
+   },
+   "Office Equipment & Services": {
+    "firms": 139,
+    "beta": 0.76,
+    "de": 0.2857,
+    "tax": 0.16190000000000002,
+    "beta_u": 0.63,
+    "cash_fv": 0.1208,
+    "beta_u_cash": 0.71
+   },
+   "Oil/Gas (Integrated)": {
+    "firms": 34,
+    "beta": 0.69,
+    "de": 0.21600000000000003,
+    "tax": 0.2827,
+    "beta_u": 0.59,
+    "cash_fv": 0.0622,
+    "beta_u_cash": 0.63
+   },
+   "Oil/Gas (Production and Exploration)": {
+    "firms": 539,
+    "beta": 0.89,
+    "de": 0.3582,
+    "tax": 0.08960000000000001,
+    "beta_u": 0.7,
+    "cash_fv": 0.0638,
+    "beta_u_cash": 0.75
+   },
+   "Oil/Gas Distribution": {
+    "firms": 186,
+    "beta": 0.65,
+    "de": 0.6154,
+    "tax": 0.12140000000000001,
+    "beta_u": 0.45,
+    "cash_fv": 0.028900000000000002,
+    "beta_u_cash": 0.46
+   },
+   "Oilfield Svcs/Equip.": {
+    "firms": 431,
+    "beta": 0.95,
+    "de": 0.39659999999999995,
+    "tax": 0.1373,
+    "beta_u": 0.73,
+    "cash_fv": 0.085,
+    "beta_u_cash": 0.8
+   },
+   "Packaging & Container": {
+    "firms": 438,
+    "beta": 0.76,
+    "de": 0.5265,
+    "tax": 0.16670000000000001,
+    "beta_u": 0.55,
+    "cash_fv": 0.053099999999999994,
+    "beta_u_cash": 0.58
+   },
+   "Paper/Forest Products": {
+    "firms": 271,
+    "beta": 0.89,
+    "de": 0.7807999999999999,
+    "tax": 0.1251,
+    "beta_u": 0.56,
+    "cash_fv": 0.0805,
+    "beta_u_cash": 0.61
+   },
+   "Power": {
+    "firms": 486,
+    "beta": 0.71,
+    "de": 0.8587,
+    "tax": 0.17859999999999998,
+    "beta_u": 0.43,
+    "cash_fv": 0.0455,
+    "beta_u_cash": 0.46
+   },
+   "Precious Metals": {
+    "firms": 777,
+    "beta": 1.4,
+    "de": 0.0906,
+    "tax": 0.051100000000000007,
+    "beta_u": 1.31,
+    "cash_fv": 0.0472,
+    "beta_u_cash": 1.37
+   },
+   "Publishing & Newspapers": {
+    "firms": 307,
+    "beta": 0.82,
+    "de": 0.2799,
+    "tax": 0.1503,
+    "beta_u": 0.68,
+    "cash_fv": 0.1326,
+    "beta_u_cash": 0.78
+   },
+   "R.E.I.T.": {
+    "firms": 643,
+    "beta": 0.56,
+    "de": 0.8007,
+    "tax": 0.0397,
+    "beta_u": 0.35,
+    "cash_fv": 0.022400000000000003,
+    "beta_u_cash": 0.36
+   },
+   "Real Estate (Development)": {
+    "firms": 895,
+    "beta": 0.93,
+    "de": 1.9118000000000002,
+    "tax": 0.1452,
+    "beta_u": 0.38,
+    "cash_fv": 0.1447,
+    "beta_u_cash": 0.45
+   },
+   "Real Estate (General/Diversified)": {
+    "firms": 312,
+    "beta": 0.93,
+    "de": 0.8856,
+    "tax": 0.1429,
+    "beta_u": 0.56,
+    "cash_fv": 0.0653,
+    "beta_u_cash": 0.6
+   },
+   "Real Estate (Operations & Services)": {
+    "firms": 752,
+    "beta": 0.78,
+    "de": 0.825,
+    "tax": 0.1427,
+    "beta_u": 0.48,
+    "cash_fv": 0.058899999999999994,
+    "beta_u_cash": 0.51
+   },
+   "Recreation": {
+    "firms": 332,
+    "beta": 1.01,
+    "de": 0.3337,
+    "tax": 0.1477,
+    "beta_u": 0.81,
+    "cash_fv": 0.0947,
+    "beta_u_cash": 0.89
+   },
+   "Reinsurance": {
+    "firms": 32,
+    "beta": 0.99,
+    "de": 0.2028,
+    "tax": 0.17739999999999997,
+    "beta_u": 0.86,
+    "cash_fv": 0.09789999999999999,
+    "beta_u_cash": 0.95
+   },
+   "Restaurant/Dining": {
+    "firms": 410,
+    "beta": 0.75,
+    "de": 0.2601,
+    "tax": 0.1521,
+    "beta_u": 0.63,
+    "cash_fv": 0.0433,
+    "beta_u_cash": 0.66
+   },
+   "Retail (Automotive)": {
+    "firms": 212,
+    "beta": 0.83,
+    "de": 0.5275,
+    "tax": 0.1693,
+    "beta_u": 0.6,
+    "cash_fv": 0.0492,
+    "beta_u_cash": 0.63
+   },
+   "Retail (Building Supply)": {
+    "firms": 121,
+    "beta": 0.94,
+    "de": 0.2595,
+    "tax": 0.1844,
+    "beta_u": 0.79,
+    "cash_fv": 0.0163,
+    "beta_u_cash": 0.8
+   },
+   "Retail (Distributors)": {
+    "firms": 1079,
+    "beta": 0.81,
+    "de": 0.48340000000000005,
+    "tax": 0.1748,
+    "beta_u": 0.6,
+    "cash_fv": 0.0698,
+    "beta_u_cash": 0.64
+   },
+   "Retail (General)": {
+    "firms": 252,
+    "beta": 0.98,
+    "de": 0.1304,
+    "tax": 0.17670000000000002,
+    "beta_u": 0.9,
+    "cash_fv": 0.0447,
+    "beta_u_cash": 0.94
+   },
+   "Retail (Grocery and Food)": {
+    "firms": 215,
+    "beta": 0.87,
+    "de": 0.4596,
+    "tax": 0.20809999999999998,
+    "beta_u": 0.65,
+    "cash_fv": 0.0581,
+    "beta_u_cash": 0.69
+   },
+   "Retail (REITs)": {
+    "firms": 113,
+    "beta": 0.61,
+    "de": 0.7112999999999999,
+    "tax": 0.0682,
+    "beta_u": 0.4,
+    "cash_fv": 0.0252,
+    "beta_u_cash": 0.41
+   },
+   "Retail (Special Lines)": {
+    "firms": 649,
+    "beta": 0.96,
+    "de": 0.18359999999999999,
+    "tax": 0.16920000000000002,
+    "beta_u": 0.84,
+    "cash_fv": 0.0653,
+    "beta_u_cash": 0.9
+   },
+   "Rubber& Tires": {
+    "firms": 91,
+    "beta": 0.94,
+    "de": 0.4412,
+    "tax": 0.1804,
+    "beta_u": 0.71,
+    "cash_fv": 0.0935,
+    "beta_u_cash": 0.78
+   },
+   "Semiconductor": {
+    "firms": 675,
+    "beta": 1.88,
+    "de": 0.041299999999999996,
+    "tax": 0.08460000000000001,
+    "beta_u": 1.82,
+    "cash_fv": 0.0258,
+    "beta_u_cash": 1.87
+   },
+   "Semiconductor Equip": {
+    "firms": 391,
+    "beta": 2.13,
+    "de": 0.056100000000000004,
+    "tax": 0.1219,
+    "beta_u": 2.04,
+    "cash_fv": 0.0363,
+    "beta_u_cash": 2.12
+   },
+   "Shipbuilding & Marine": {
+    "firms": 359,
+    "beta": 0.87,
+    "de": 0.4169,
+    "tax": 0.1506,
+    "beta_u": 0.67,
+    "cash_fv": 0.1528,
+    "beta_u_cash": 0.79
+   },
+   "Shoe": {
+    "firms": 84,
+    "beta": 0.92,
+    "de": 0.1429,
+    "tax": 0.1507,
+    "beta_u": 0.83,
+    "cash_fv": 0.0716,
+    "beta_u_cash": 0.89
+   },
+   "Software (Entertainment)": {
+    "firms": 298,
+    "beta": 1.25,
+    "de": 0.031400000000000004,
+    "tax": 0.10869999999999999,
+    "beta_u": 1.22,
+    "cash_fv": 0.013600000000000001,
+    "beta_u_cash": 1.23
+   },
+   "Software (Internet)": {
+    "firms": 150,
+    "beta": 1.39,
+    "de": 0.1001,
+    "tax": 0.11320000000000001,
+    "beta_u": 1.3,
+    "cash_fv": 0.031200000000000002,
+    "beta_u_cash": 1.34
+   },
+   "Software (System & Application)": {
+    "firms": 1532,
+    "beta": 1.35,
+    "de": 0.0584,
+    "tax": 0.0904,
+    "beta_u": 1.3,
+    "cash_fv": 0.0252,
+    "beta_u_cash": 1.33
+   },
+   "Steel": {
+    "firms": 719,
+    "beta": 1.13,
+    "de": 0.47340000000000004,
+    "tax": 0.14550000000000002,
+    "beta_u": 0.83,
+    "cash_fv": 0.1024,
+    "beta_u_cash": 0.93
+   },
+   "Telecom (Wireless)": {
+    "firms": 101,
+    "beta": 0.78,
+    "de": 0.4997,
+    "tax": 0.17670000000000002,
+    "beta_u": 0.57,
+    "cash_fv": 0.0546,
+    "beta_u_cash": 0.6
+   },
+   "Telecom. Equipment": {
+    "firms": 437,
+    "beta": 1.33,
+    "de": 0.0962,
+    "tax": 0.0827,
+    "beta_u": 1.24,
+    "cash_fv": 0.0455,
+    "beta_u_cash": 1.3
+   },
+   "Telecom. Services": {
+    "firms": 283,
+    "beta": 0.73,
+    "de": 0.7318000000000001,
+    "tax": 0.154,
+    "beta_u": 0.47,
+    "cash_fv": 0.0499,
+    "beta_u_cash": 0.5
+   },
+   "Tobacco": {
+    "firms": 48,
+    "beta": 0.43,
+    "de": 0.2366,
+    "tax": 0.20129999999999998,
+    "beta_u": 0.36,
+    "cash_fv": 0.0298,
+    "beta_u_cash": 0.37
+   },
+   "Transportation": {
+    "firms": 451,
+    "beta": 0.96,
+    "de": 0.5347,
+    "tax": 0.1759,
+    "beta_u": 0.69,
+    "cash_fv": 0.0783,
+    "beta_u_cash": 0.75
+   },
+   "Transportation (Railroads)": {
+    "firms": 54,
+    "beta": 0.72,
+    "de": 0.4744,
+    "tax": 0.2419,
+    "beta_u": 0.53,
+    "cash_fv": 0.0408,
+    "beta_u_cash": 0.55
+   },
+   "Trucking": {
+    "firms": 130,
+    "beta": 0.85,
+    "de": 0.3987,
+    "tax": 0.2003,
+    "beta_u": 0.65,
+    "cash_fv": 0.033,
+    "beta_u_cash": 0.68
+   },
+   "Utility (General)": {
+    "firms": 52,
+    "beta": 0.5,
+    "de": 0.7623000000000001,
+    "tax": 0.18539999999999998,
+    "beta_u": 0.32,
+    "cash_fv": 0.0395,
+    "beta_u_cash": 0.33
+   },
+   "Utility (Water)": {
+    "firms": 106,
+    "beta": 0.7,
+    "de": 0.9127,
+    "tax": 0.1609,
+    "beta_u": 0.42,
+    "cash_fv": 0.058899999999999994,
+    "beta_u_cash": 0.45
+   }
+  }
+ },
+ "multiples": {
+  "source": "Damodaran, EV/EBITDA by Sector (US), janvier 2026 — repli de développement (la mise à jour automatique utilise la table Europe)",
+  "date": "2026-01-09",
+  "region": "US",
+  "by_industry": {
+   "Advertising": {
+    "firms": 52,
+    "ev_ebitda": 12.0,
+    "ev_ebitda_all": 15.12
+   },
+   "Aerospace/Defense": {
+    "firms": 79,
+    "ev_ebitda": 21.58,
+    "ev_ebitda_all": 33.42
+   },
+   "Air Transport": {
+    "firms": 23,
+    "ev_ebitda": 7.58,
+    "ev_ebitda_all": 9.99
+   },
+   "Apparel": {
+    "firms": 35,
+    "ev_ebitda": 10.3,
+    "ev_ebitda_all": 13.89
+   },
+   "Auto & Truck": {
+    "firms": 33,
+    "ev_ebitda": 47.76,
+    "ev_ebitda_all": 51.85
+   },
+   "Auto Parts": {
+    "firms": 35,
+    "ev_ebitda": 6.43,
+    "ev_ebitda_all": 9.11
+   },
+   "Beverage (Alcoholic)": {
+    "firms": 14,
+    "ev_ebitda": 8.61,
+    "ev_ebitda_all": 8.31
+   },
+   "Beverage (Soft)": {
+    "firms": 27,
+    "ev_ebitda": 16.9,
+    "ev_ebitda_all": 18.24
+   },
+   "Broadcasting": {
+    "firms": 24,
+    "ev_ebitda": 7.85,
+    "ev_ebitda_all": 7.66
+   },
+   "Building Materials": {
+    "firms": 41,
+    "ev_ebitda": 11.61,
+    "ev_ebitda_all": 11.81
+   },
+   "Business & Consumer Services": {
+    "firms": 155,
+    "ev_ebitda": 14.26,
+    "ev_ebitda_all": 16.17
+   },
+   "Cable TV": {
+    "firms": 9,
+    "ev_ebitda": 6.21,
+    "ev_ebitda_all": 6.35
+   },
+   "Chemical (Basic)": {
+    "firms": 29,
+    "ev_ebitda": 8.57,
+    "ev_ebitda_all": 6.85
+   },
+   "Chemical (Diversified)": {
+    "firms": 4,
+    "ev_ebitda": 8.39,
+    "ev_ebitda_all": 8.7
+   },
+   "Chemical (Specialty)": {
+    "firms": 59,
+    "ev_ebitda": 13.36,
+    "ev_ebitda_all": 14.7
+   },
+   "Coal & Related Energy": {
+    "firms": 16,
+    "ev_ebitda": 10.37,
+    "ev_ebitda_all": 19.45
+   },
+   "Computer Services": {
+    "firms": 64,
+    "ev_ebitda": 14.1,
+    "ev_ebitda_all": 16.46
+   },
+   "Computers/Peripherals": {
+    "firms": 36,
+    "ev_ebitda": 25.42,
+    "ev_ebitda_all": 26.18
+   },
+   "Construction Supplies": {
+    "firms": 40,
+    "ev_ebitda": 16.82,
+    "ev_ebitda_all": 16.6
+   },
+   "Diversified": {
+    "firms": 20,
+    "ev_ebitda": 11.42,
+    "ev_ebitda_all": 9.85
+   },
+   "Drugs (Biotechnology)": {
+    "firms": 496,
+    "ev_ebitda": 15.78,
+    "ev_ebitda_all": 51.49
+   },
+   "Drugs (Pharmaceutical)": {
+    "firms": 228,
+    "ev_ebitda": 15.25,
+    "ev_ebitda_all": 18.58
+   },
+   "Education": {
+    "firms": 32,
+    "ev_ebitda": 9.26,
+    "ev_ebitda_all": 12.01
+   },
+   "Electrical Equipment": {
+    "firms": 112,
+    "ev_ebitda": 24.59,
+    "ev_ebitda_all": 34.95
+   },
+   "Electronics (Consumer & Office)": {
+    "firms": 8,
+    "ev_ebitda": 30.7,
+    "ev_ebitda_all": null
+   },
+   "Electronics (General)": {
+    "firms": 114,
+    "ev_ebitda": 19.99,
+    "ev_ebitda_all": 25.93
+   },
+   "Engineering/Construction": {
+    "firms": 48,
+    "ev_ebitda": 17.18,
+    "ev_ebitda_all": 21.8
+   },
+   "Entertainment": {
+    "firms": 92,
+    "ev_ebitda": 19.41,
+    "ev_ebitda_all": 24.39
+   },
+   "Environmental & Waste Services": {
+    "firms": 53,
+    "ev_ebitda": 15.61,
+    "ev_ebitda_all": 17.63
+   },
+   "Farming/Agriculture": {
+    "firms": 35,
+    "ev_ebitda": 16.04,
+    "ev_ebitda_all": 16.66
+   },
+   "Food Processing": {
+    "firms": 78,
+    "ev_ebitda": 10.01,
+    "ev_ebitda_all": 9.63
+   },
+   "Food Wholesalers": {
+    "firms": 13,
+    "ev_ebitda": 11.08,
+    "ev_ebitda_all": 12.32
+   },
+   "Furn/Home Furnishings": {
+    "firms": 27,
+    "ev_ebitda": 11.27,
+    "ev_ebitda_all": 13.66
+   },
+   "Green & Renewable Energy": {
+    "firms": 15,
+    "ev_ebitda": 13.44,
+    "ev_ebitda_all": 13.46
+   },
+   "Healthcare Products": {
+    "firms": 204,
+    "ev_ebitda": 19.78,
+    "ev_ebitda_all": 23.42
+   },
+   "Healthcare Support Services": {
+    "firms": 104,
+    "ev_ebitda": 11.17,
+    "ev_ebitda_all": 11.84
+   },
+   "Heathcare Information and Technology": {
+    "firms": 115,
+    "ev_ebitda": 21.27,
+    "ev_ebitda_all": 25.9
+   },
+   "Homebuilding": {
+    "firms": 30,
+    "ev_ebitda": 8.92,
+    "ev_ebitda_all": 8.43
+   },
+   "Hospitals/Healthcare Facilities": {
+    "firms": 31,
+    "ev_ebitda": 8.86,
+    "ev_ebitda_all": 10.69
+   },
+   "Hotel/Gaming": {
+    "firms": 63,
+    "ev_ebitda": 14.93,
+    "ev_ebitda_all": 17.7
+   },
+   "Household Products": {
+    "firms": 110,
+    "ev_ebitda": 13.17,
+    "ev_ebitda_all": 13.69
+   },
+   "Information Services": {
+    "firms": 15,
+    "ev_ebitda": 11.5,
+    "ev_ebitda_all": 12.81
+   },
+   "Machinery": {
+    "firms": 105,
+    "ev_ebitda": 16.22,
+    "ev_ebitda_all": 17.46
+   },
+   "Metals & Mining": {
+    "firms": 73,
+    "ev_ebitda": 11.39,
+    "ev_ebitda_all": 13.74
+   },
+   "Office Equipment & Services": {
+    "firms": 14,
+    "ev_ebitda": 8.59,
+    "ev_ebitda_all": 10.0
+   },
+   "Oil/Gas (Integrated)": {
+    "firms": 4,
+    "ev_ebitda": 8.16,
+    "ev_ebitda_all": 8.09
+   },
+   "Oil/Gas (Production and Exploration)": {
+    "firms": 142,
+    "ev_ebitda": 5.15,
+    "ev_ebitda_all": 6.21
+   },
+   "Oil/Gas Distribution": {
+    "firms": 23,
+    "ev_ebitda": 11.56,
+    "ev_ebitda_all": 13.35
+   },
+   "Oilfield Svcs/Equip.": {
+    "firms": 97,
+    "ev_ebitda": 8.63,
+    "ev_ebitda_all": 9.56
+   },
+   "Packaging & Container": {
+    "firms": 19,
+    "ev_ebitda": 9.71,
+    "ev_ebitda_all": 10.78
+   },
+   "Paper/Forest Products": {
+    "firms": 6,
+    "ev_ebitda": 8.18,
+    "ev_ebitda_all": 6.97
+   },
+   "Power": {
+    "firms": 46,
+    "ev_ebitda": 12.38,
+    "ev_ebitda_all": 13.29
+   },
+   "Precious Metals": {
+    "firms": 56,
+    "ev_ebitda": 10.68,
+    "ev_ebitda_all": 17.28
+   },
+   "Publishing & Newspapers": {
+    "firms": 19,
+    "ev_ebitda": 11.24,
+    "ev_ebitda_all": 12.9
+   },
+   "Real Estate (Development)": {
+    "firms": 14,
+    "ev_ebitda": 10.23,
+    "ev_ebitda_all": 12.16
+   },
+   "Real Estate (General/Diversified)": {
+    "firms": 12,
+    "ev_ebitda": 17.29,
+    "ev_ebitda_all": 25.11
+   },
+   "Real Estate (Operations & Services)": {
+    "firms": 54,
+    "ev_ebitda": 21.95,
+    "ev_ebitda_all": 36.95
+   },
+   "Recreation": {
+    "firms": 49,
+    "ev_ebitda": 10.39,
+    "ev_ebitda_all": 11.66
+   },
+   "Restaurant/Dining": {
+    "firms": 64,
+    "ev_ebitda": 17.49,
+    "ev_ebitda_all": 21.4
+   },
+   "Retail (Automotive)": {
+    "firms": 34,
+    "ev_ebitda": 14.79,
+    "ev_ebitda_all": 17.56
+   },
+   "Retail (Building Supply)": {
+    "firms": 14,
+    "ev_ebitda": 14.42,
+    "ev_ebitda_all": 15.89
+   },
+   "Retail (Distributors)": {
+    "firms": 62,
+    "ev_ebitda": 13.71,
+    "ev_ebitda_all": 16.66
+   },
+   "Retail (General)": {
+    "firms": 23,
+    "ev_ebitda": 17.38,
+    "ev_ebitda_all": 20.87
+   },
+   "Retail (Grocery and Food)": {
+    "firms": 15,
+    "ev_ebitda": 8.94,
+    "ev_ebitda_all": 9.07
+   },
+   "Retail (Special Lines)": {
+    "firms": 94,
+    "ev_ebitda": 11.47,
+    "ev_ebitda_all": 16.5
+   },
+   "Rubber& Tires": {
+    "firms": 3,
+    "ev_ebitda": 6.74,
+    "ev_ebitda_all": 6.74
+   },
+   "Semiconductor": {
+    "firms": 66,
+    "ev_ebitda": 34.75,
+    "ev_ebitda_all": 42.7
+   },
+   "Semiconductor Equip": {
+    "firms": 31,
+    "ev_ebitda": 24.74,
+    "ev_ebitda_all": 26.18
+   },
+   "Shipbuilding & Marine": {
+    "firms": 8,
+    "ev_ebitda": 7.95,
+    "ev_ebitda_all": 8.51
+   },
+   "Shoe": {
+    "firms": 11,
+    "ev_ebitda": 16.86,
+    "ev_ebitda_all": 17.19
+   },
+   "Software (Entertainment)": {
+    "firms": 77,
+    "ev_ebitda": 22.01,
+    "ev_ebitda_all": 26.16
+   },
+   "Software (Internet)": {
+    "firms": 29,
+    "ev_ebitda": 30.26,
+    "ev_ebitda_all": 100.45
+   },
+   "Software (System & Application)": {
+    "firms": 309,
+    "ev_ebitda": 24.48,
+    "ev_ebitda_all": 31.75
+   },
+   "Steel": {
+    "firms": 19,
+    "ev_ebitda": 11.59,
+    "ev_ebitda_all": 11.05
+   },
+   "Telecom (Wireless)": {
+    "firms": 12,
+    "ev_ebitda": 8.97,
+    "ev_ebitda_all": 10.75
+   },
+   "Telecom. Equipment": {
+    "firms": 57,
+    "ev_ebitda": 24.07,
+    "ev_ebitda_all": 27.2
+   },
+   "Telecom. Services": {
+    "firms": 39,
+    "ev_ebitda": 6.54,
+    "ev_ebitda_all": 7.54
+   },
+   "Tobacco": {
+    "firms": 10,
+    "ev_ebitda": 13.46,
+    "ev_ebitda_all": 15.15
+   },
+   "Transportation": {
+    "firms": 19,
+    "ev_ebitda": 12.55,
+    "ev_ebitda_all": 16.69
+   },
+   "Transportation (Railroads)": {
+    "firms": 4,
+    "ev_ebitda": 13.49,
+    "ev_ebitda_all": 13.55
+   },
+   "Trucking": {
+    "firms": 26,
+    "ev_ebitda": 10.41,
+    "ev_ebitda_all": 11.19
+   },
+   "Utility (General)": {
+    "firms": 14,
+    "ev_ebitda": 13.73,
+    "ev_ebitda_all": 15.04
+   },
+   "Utility (Water)": {
+    "firms": 14,
+    "ev_ebitda": 14.14,
+    "ev_ebitda_all": 15.65
+   }
+  }
+ },
+ "ratings": {
+  "source": "Damodaran, Ratings, Interest Coverage Ratios and Default Spreads, janvier 2026; seuils pour petites entreprises (smallrating)",
+  "date": "2026-01-09",
+  "spreads": {
+   "D": 0.19,
+   "C": 0.16,
+   "CC": 0.1261,
+   "CCC": 0.0885,
+   "B-": 0.0509,
+   "B": 0.0321,
+   "B+": 0.0275,
+   "BB": 0.0184,
+   "BB+": 0.0138,
+   "BBB": 0.0111,
+   "A-": 0.0089,
+   "A": 0.0078000000000000005,
+   "A+": 0.006999999999999999,
+   "AA": 0.0055000000000000005,
+   "AAA": 0.004
+  },
+  "small_firm_thresholds": [
+   [
+    -1000000000.0,
+    0.5,
+    "D"
+   ],
+   [
+    0.5,
+    0.8,
+    "C"
+   ],
+   [
+    0.8,
+    1.25,
+    "CC"
+   ],
+   [
+    1.25,
+    1.5,
+    "CCC"
+   ],
+   [
+    1.5,
+    2.0,
+    "B-"
+   ],
+   [
+    2.0,
+    2.5,
+    "B"
+   ],
+   [
+    2.5,
+    3.0,
+    "B+"
+   ],
+   [
+    3.0,
+    3.5,
+    "BB"
+   ],
+   [
+    3.5,
+    4.0,
+    "BB+"
+   ],
+   [
+    4.0,
+    4.5,
+    "BBB"
+   ],
+   [
+    4.5,
+    6.0,
+    "A-"
+   ],
+   [
+    6.0,
+    7.5,
+    "A"
+   ],
+   [
+    7.5,
+    9.5,
+    "A+"
+   ],
+   [
+    9.5,
+    12.5,
+    "AA"
+   ],
+   [
+    12.5,
+    1000000000.0,
+    "AAA"
+   ]
+  ]
+ }
+}

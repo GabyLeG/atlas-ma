@@ -1,0 +1,622 @@
+{
+ "version": "NAF rév. 2 — divisions (2 chiffres)",
+ "divisions": {
+  "01": {
+   "fr": "Agriculture et élevage",
+   "en": "Farming",
+   "macro": "agri",
+   "industry": "Farming/Agriculture"
+  },
+  "02": {
+   "fr": "Sylviculture",
+   "en": "Forestry",
+   "macro": "agri",
+   "industry": "Paper/Forest Products"
+  },
+  "03": {
+   "fr": "Pêche et aquaculture",
+   "en": "Fishing",
+   "macro": "agri",
+   "industry": "Farming/Agriculture"
+  },
+  "05": {
+   "fr": "Extraction de houille",
+   "en": "Coal mining",
+   "macro": "energie",
+   "industry": "Coal & Related Energy"
+  },
+  "06": {
+   "fr": "Extraction d'hydrocarbures",
+   "en": "Oil & gas extraction",
+   "macro": "energie",
+   "industry": "Oil/Gas (Production and Exploration)"
+  },
+  "07": {
+   "fr": "Extraction de minerais métalliques",
+   "en": "Metal ore mining",
+   "macro": "industrie",
+   "industry": "Metals & Mining"
+  },
+  "08": {
+   "fr": "Autres industries extractives",
+   "en": "Other mining & quarrying",
+   "macro": "industrie",
+   "industry": "Metals & Mining"
+  },
+  "09": {
+   "fr": "Services de soutien aux industries extractives",
+   "en": "Mining support services",
+   "macro": "energie",
+   "industry": "Oilfield Svcs/Equip."
+  },
+  "10": {
+   "fr": "Industries alimentaires",
+   "en": "Food manufacturing",
+   "macro": "agro",
+   "industry": "Food Processing"
+  },
+  "11": {
+   "fr": "Fabrication de boissons",
+   "en": "Beverages",
+   "macro": "agro",
+   "industry": "Beverage (Alcoholic)"
+  },
+  "12": {
+   "fr": "Fabrication de produits à base de tabac",
+   "en": "Tobacco",
+   "macro": "agro",
+   "industry": "Tobacco"
+  },
+  "13": {
+   "fr": "Fabrication de textiles",
+   "en": "Textiles",
+   "macro": "conso",
+   "industry": "Apparel"
+  },
+  "14": {
+   "fr": "Industrie de l'habillement",
+   "en": "Clothing",
+   "macro": "conso",
+   "industry": "Apparel"
+  },
+  "15": {
+   "fr": "Industrie du cuir et de la chaussure",
+   "en": "Leather & footwear",
+   "macro": "conso",
+   "industry": "Shoe"
+  },
+  "16": {
+   "fr": "Travail du bois",
+   "en": "Wood products",
+   "macro": "industrie",
+   "industry": "Paper/Forest Products"
+  },
+  "17": {
+   "fr": "Industrie du papier et du carton",
+   "en": "Paper & board",
+   "macro": "industrie",
+   "industry": "Paper/Forest Products"
+  },
+  "18": {
+   "fr": "Imprimerie et reproduction",
+   "en": "Printing",
+   "macro": "medias",
+   "industry": "Publishing & Newspapers"
+  },
+  "19": {
+   "fr": "Cokéfaction et raffinage",
+   "en": "Refining",
+   "macro": "energie",
+   "industry": "Oil/Gas (Integrated)"
+  },
+  "20": {
+   "fr": "Industrie chimique",
+   "en": "Chemicals",
+   "macro": "industrie",
+   "industry": "Chemical (Specialty)"
+  },
+  "21": {
+   "fr": "Industrie pharmaceutique",
+   "en": "Pharmaceuticals",
+   "macro": "sante",
+   "industry": "Drugs (Pharmaceutical)"
+  },
+  "22": {
+   "fr": "Produits en caoutchouc et en plastique",
+   "en": "Rubber & plastics",
+   "macro": "industrie",
+   "industry": "Packaging & Container"
+  },
+  "23": {
+   "fr": "Autres produits minéraux non métalliques",
+   "en": "Non-metallic mineral products",
+   "macro": "industrie",
+   "industry": "Building Materials"
+  },
+  "24": {
+   "fr": "Métallurgie",
+   "en": "Basic metals",
+   "macro": "industrie",
+   "industry": "Steel"
+  },
+  "25": {
+   "fr": "Fabrication de produits métalliques",
+   "en": "Fabricated metal products",
+   "macro": "industrie",
+   "industry": "Machinery"
+  },
+  "26": {
+   "fr": "Produits informatiques, électroniques et optiques",
+   "en": "Computer & electronic products",
+   "macro": "tech",
+   "industry": "Electronics (General)"
+  },
+  "27": {
+   "fr": "Fabrication d'équipements électriques",
+   "en": "Electrical equipment",
+   "macro": "industrie",
+   "industry": "Electrical Equipment"
+  },
+  "28": {
+   "fr": "Fabrication de machines et équipements",
+   "en": "Machinery & equipment",
+   "macro": "industrie",
+   "industry": "Machinery"
+  },
+  "29": {
+   "fr": "Industrie automobile",
+   "en": "Automotive",
+   "macro": "industrie",
+   "industry": "Auto Parts"
+  },
+  "30": {
+   "fr": "Autres matériels de transport",
+   "en": "Other transport equipment",
+   "macro": "industrie",
+   "industry": "Aerospace/Defense"
+  },
+  "31": {
+   "fr": "Fabrication de meubles",
+   "en": "Furniture",
+   "macro": "conso",
+   "industry": "Furn/Home Furnishings"
+  },
+  "32": {
+   "fr": "Autres industries manufacturières",
+   "en": "Other manufacturing",
+   "macro": "industrie",
+   "industry": "Diversified"
+  },
+  "33": {
+   "fr": "Réparation et installation de machines",
+   "en": "Repair & installation of machinery",
+   "macro": "industrie",
+   "industry": "Machinery"
+  },
+  "35": {
+   "fr": "Électricité, gaz, vapeur",
+   "en": "Electricity & gas",
+   "macro": "energie",
+   "industry": "Power"
+  },
+  "36": {
+   "fr": "Captage et distribution d'eau",
+   "en": "Water supply",
+   "macro": "energie",
+   "industry": "Utility (Water)"
+  },
+  "37": {
+   "fr": "Collecte et traitement des eaux usées",
+   "en": "Sewerage",
+   "macro": "energie",
+   "industry": "Environmental & Waste Services"
+  },
+  "38": {
+   "fr": "Gestion et valorisation des déchets",
+   "en": "Waste management",
+   "macro": "energie",
+   "industry": "Environmental & Waste Services"
+  },
+  "39": {
+   "fr": "Dépollution",
+   "en": "Remediation",
+   "macro": "energie",
+   "industry": "Environmental & Waste Services"
+  },
+  "41": {
+   "fr": "Construction de bâtiments",
+   "en": "Building construction",
+   "macro": "btp",
+   "industry": "Homebuilding"
+  },
+  "42": {
+   "fr": "Génie civil",
+   "en": "Civil engineering",
+   "macro": "btp",
+   "industry": "Engineering/Construction"
+  },
+  "43": {
+   "fr": "Travaux de construction spécialisés",
+   "en": "Specialised construction",
+   "macro": "btp",
+   "industry": "Engineering/Construction"
+  },
+  "45": {
+   "fr": "Commerce et réparation automobiles",
+   "en": "Motor trade & repair",
+   "macro": "commerce",
+   "industry": "Retail (Automotive)"
+  },
+  "46": {
+   "fr": "Commerce de gros",
+   "en": "Wholesale trade",
+   "macro": "commerce",
+   "industry": "Retail (Distributors)"
+  },
+  "47": {
+   "fr": "Commerce de détail",
+   "en": "Retail trade",
+   "macro": "commerce",
+   "industry": "Retail (General)"
+  },
+  "49": {
+   "fr": "Transports terrestres",
+   "en": "Land transport",
+   "macro": "transport",
+   "industry": "Trucking"
+  },
+  "50": {
+   "fr": "Transports par eau",
+   "en": "Water transport",
+   "macro": "transport",
+   "industry": "Shipbuilding & Marine"
+  },
+  "51": {
+   "fr": "Transports aériens",
+   "en": "Air transport",
+   "macro": "transport",
+   "industry": "Air Transport"
+  },
+  "52": {
+   "fr": "Entreposage et services auxiliaires des transports",
+   "en": "Warehousing & logistics",
+   "macro": "transport",
+   "industry": "Transportation"
+  },
+  "53": {
+   "fr": "Activités de poste et de courrier",
+   "en": "Postal & courier",
+   "macro": "transport",
+   "industry": "Transportation"
+  },
+  "55": {
+   "fr": "Hébergement",
+   "en": "Accommodation",
+   "macro": "hotellerie",
+   "industry": "Hotel/Gaming"
+  },
+  "56": {
+   "fr": "Restauration",
+   "en": "Food service",
+   "macro": "hotellerie",
+   "industry": "Restaurant/Dining"
+  },
+  "58": {
+   "fr": "Édition",
+   "en": "Publishing",
+   "macro": "medias",
+   "industry": "Publishing & Newspapers"
+  },
+  "59": {
+   "fr": "Production audiovisuelle et musicale",
+   "en": "Film, video & music",
+   "macro": "medias",
+   "industry": "Entertainment"
+  },
+  "60": {
+   "fr": "Programmation et diffusion",
+   "en": "Broadcasting",
+   "macro": "medias",
+   "industry": "Broadcasting"
+  },
+  "61": {
+   "fr": "Télécommunications",
+   "en": "Telecommunications",
+   "macro": "tech",
+   "industry": "Telecom. Services"
+  },
+  "62": {
+   "fr": "Programmation, conseil et services informatiques",
+   "en": "IT services & software",
+   "macro": "tech",
+   "industry": "Computer Services"
+  },
+  "63": {
+   "fr": "Services d'information",
+   "en": "Information services",
+   "macro": "tech",
+   "industry": "Information Services"
+  },
+  "64": {
+   "fr": "Services financiers",
+   "en": "Financial services",
+   "macro": "exclu",
+   "industry": null
+  },
+  "65": {
+   "fr": "Assurance",
+   "en": "Insurance",
+   "macro": "exclu",
+   "industry": null
+  },
+  "66": {
+   "fr": "Activités auxiliaires de services financiers",
+   "en": "Auxiliary financial services",
+   "macro": "exclu",
+   "industry": null
+  },
+  "68": {
+   "fr": "Activités immobilières",
+   "en": "Real estate",
+   "macro": "immobilier",
+   "industry": "Real Estate (Operations & Services)"
+  },
+  "69": {
+   "fr": "Activités juridiques et comptables",
+   "en": "Legal & accounting",
+   "macro": "services",
+   "industry": "Business & Consumer Services"
+  },
+  "70": {
+   "fr": "Conseil de gestion",
+   "en": "Management consulting",
+   "macro": "services",
+   "industry": "Business & Consumer Services"
+  },
+  "71": {
+   "fr": "Architecture et ingénierie",
+   "en": "Architecture & engineering",
+   "macro": "services",
+   "industry": "Engineering/Construction"
+  },
+  "72": {
+   "fr": "Recherche-développement scientifique",
+   "en": "Scientific R&D",
+   "macro": "sante",
+   "industry": "Drugs (Biotechnology)"
+  },
+  "73": {
+   "fr": "Publicité et études de marché",
+   "en": "Advertising & market research",
+   "macro": "medias",
+   "industry": "Advertising"
+  },
+  "74": {
+   "fr": "Autres activités spécialisées",
+   "en": "Other professional activities",
+   "macro": "services",
+   "industry": "Business & Consumer Services"
+  },
+  "75": {
+   "fr": "Activités vétérinaires",
+   "en": "Veterinary",
+   "macro": "sante",
+   "industry": "Healthcare Support Services"
+  },
+  "77": {
+   "fr": "Activités de location et location-bail",
+   "en": "Rental & leasing",
+   "macro": "services",
+   "industry": "Business & Consumer Services"
+  },
+  "78": {
+   "fr": "Activités liées à l'emploi",
+   "en": "Employment services",
+   "macro": "services",
+   "industry": "Business & Consumer Services"
+  },
+  "79": {
+   "fr": "Agences de voyage et voyagistes",
+   "en": "Travel agencies",
+   "macro": "hotellerie",
+   "industry": "Recreation"
+  },
+  "80": {
+   "fr": "Enquêtes et sécurité",
+   "en": "Security",
+   "macro": "services",
+   "industry": "Business & Consumer Services"
+  },
+  "81": {
+   "fr": "Services relatifs aux bâtiments",
+   "en": "Building services",
+   "macro": "services",
+   "industry": "Business & Consumer Services"
+  },
+  "82": {
+   "fr": "Services administratifs de soutien",
+   "en": "Business support services",
+   "macro": "services",
+   "industry": "Business & Consumer Services"
+  },
+  "84": {
+   "fr": "Administration publique",
+   "en": "Public administration",
+   "macro": "exclu",
+   "industry": null
+  },
+  "85": {
+   "fr": "Enseignement",
+   "en": "Education",
+   "macro": "services",
+   "industry": "Education"
+  },
+  "86": {
+   "fr": "Activités pour la santé humaine",
+   "en": "Human health",
+   "macro": "sante",
+   "industry": "Hospitals/Healthcare Facilities"
+  },
+  "87": {
+   "fr": "Hébergement médico-social",
+   "en": "Residential care",
+   "macro": "sante",
+   "industry": "Healthcare Support Services"
+  },
+  "88": {
+   "fr": "Action sociale sans hébergement",
+   "en": "Social work",
+   "macro": "sante",
+   "industry": "Healthcare Support Services"
+  },
+  "90": {
+   "fr": "Activités créatives et de spectacle",
+   "en": "Creative arts & entertainment",
+   "macro": "medias",
+   "industry": "Entertainment"
+  },
+  "91": {
+   "fr": "Bibliothèques, musées, archives",
+   "en": "Libraries & museums",
+   "macro": "medias",
+   "industry": "Entertainment"
+  },
+  "92": {
+   "fr": "Jeux de hasard et d'argent",
+   "en": "Gambling",
+   "macro": "hotellerie",
+   "industry": "Hotel/Gaming"
+  },
+  "93": {
+   "fr": "Activités sportives et de loisirs",
+   "en": "Sports & recreation",
+   "macro": "hotellerie",
+   "industry": "Recreation"
+  },
+  "94": {
+   "fr": "Organisations associatives",
+   "en": "Membership organisations",
+   "macro": "exclu",
+   "industry": null
+  },
+  "95": {
+   "fr": "Réparation d'ordinateurs et de biens",
+   "en": "Repair of computers & goods",
+   "macro": "services",
+   "industry": "Business & Consumer Services"
+  },
+  "96": {
+   "fr": "Autres services personnels",
+   "en": "Other personal services",
+   "macro": "services",
+   "industry": "Business & Consumer Services"
+  },
+  "97": {
+   "fr": "Ménages employeurs",
+   "en": "Households as employers",
+   "macro": "exclu",
+   "industry": null
+  },
+  "98": {
+   "fr": "Activités indifférenciées des ménages",
+   "en": "Households",
+   "macro": "exclu",
+   "industry": null
+  },
+  "99": {
+   "fr": "Organisations extraterritoriales",
+   "en": "Extraterritorial organisations",
+   "macro": "exclu",
+   "industry": null
+  }
+ },
+ "class_overrides": {
+  "5821": "Software (Entertainment)",
+  "5829": "Software (System & Application)",
+  "6201": "Software (System & Application)",
+  "6312": "Software (Internet)",
+  "3250": "Healthcare Products",
+  "4711": "Retail (Grocery and Food)",
+  "4910": "Transportation (Railroads)",
+  "4920": "Transportation (Railroads)",
+  "7211": "Drugs (Biotechnology)",
+  "7219": "Business & Consumer Services",
+  "7220": "Business & Consumer Services",
+  "1101": "Beverage (Alcoholic)",
+  "1102": "Beverage (Alcoholic)",
+  "1107": "Beverage (Soft)",
+  "2110": "Drugs (Pharmaceutical)",
+  "2120": "Drugs (Pharmaceutical)",
+  "2611": "Semiconductor",
+  "2620": "Computers/Peripherals",
+  "2630": "Telecom. Equipment"
+ },
+ "excluded_classes": {
+  "7010": "Holdings (activités des sièges sociaux)",
+  "6420": "Holdings financières",
+  "6820": "Location de biens immobiliers propres (SCI)"
+ },
+ "macros": {
+  "agri": {
+   "fr": "Agriculture",
+   "en": "Agriculture"
+  },
+  "agro": {
+   "fr": "Agroalimentaire",
+   "en": "Food & beverage"
+  },
+  "industrie": {
+   "fr": "Industrie",
+   "en": "Industrials"
+  },
+  "energie": {
+   "fr": "Énergie et environnement",
+   "en": "Energy & environment"
+  },
+  "btp": {
+   "fr": "BTP",
+   "en": "Construction"
+  },
+  "commerce": {
+   "fr": "Commerce",
+   "en": "Trade"
+  },
+  "transport": {
+   "fr": "Transport et logistique",
+   "en": "Transport & logistics"
+  },
+  "hotellerie": {
+   "fr": "Tourisme, hôtellerie, loisirs",
+   "en": "Hospitality & leisure"
+  },
+  "medias": {
+   "fr": "Médias et communication",
+   "en": "Media & communication"
+  },
+  "tech": {
+   "fr": "Tech et télécoms",
+   "en": "Tech & telecom"
+  },
+  "sante": {
+   "fr": "Santé",
+   "en": "Healthcare"
+  },
+  "services": {
+   "fr": "Services aux entreprises",
+   "en": "Business services"
+  },
+  "conso": {
+   "fr": "Biens de consommation",
+   "en": "Consumer goods"
+  },
+  "immobilier": {
+   "fr": "Immobilier",
+   "en": "Real estate"
+  },
+  "exclu": {
+   "fr": "Exclu",
+   "en": "Excluded"
+  }
+ },
+ "note": "Correspondance NAF → secteur Damodaran établie à la main (jugement d'analyste, à revoir). Les classes listées dans class_overrides affinent la division."
+}
