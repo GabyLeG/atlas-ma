@@ -16,6 +16,7 @@ import time
 from . import config as K
 from . import market as M
 from . import valuation as V
+from .liasse import SOURCES
 
 SIZE_LABELS = {"00": "0", "01": "1-2", "02": "3-5", "03": "6-9", "11": "10-19", "12": "20-49", "21": "50-99",
                "22": "100-199", "31": "200-249", "32": "250-499", "41": "500-999", "42": "1 000-1 999",
@@ -98,12 +99,15 @@ def assemble(companies, ids, mkt, sec, today, stats, sample=False, log=print):
     market_in = {"rf": mkt["rates"]["oat10"]["value"], "euribor": mkt["rates"]["euribor3m"]["value"],
                  "erp": mkt["erp"]["value"], "ratings": mkt["ratings"]}
     rows, details, by_div = [], {}, {}
+    dropped = {"no_public_identity": 0, "excluded_sector": 0}
     for siren, co in companies.items():
         idn = ids.get(siren)
         if not idn or not idn.get("name"):
+            dropped["no_public_identity"] += 1       # closed, non-public (SIRENE) or sole trader
             continue
         div, cls, industry = classify(idn.get("naf"), sec)
         if industry is None:
+            dropped["excluded_sector"] += 1          # holdings, finance, insurance, public bodies
             continue
         s_in = M.sector_inputs(mkt, industry)
         # value from the k€-rounded figures that are published, so the list and the company page agree exactly
@@ -161,7 +165,7 @@ def assemble(companies, ids, mkt, sec, today, stats, sample=False, log=print):
         "inpi_coverage": ((stats.get("inpi_api") or {}).get("coverage")),
         "rule": {"months_until_next_accounts_due": K.MONTHS_UNTIL_NEXT_ACCOUNTS_DUE, "bilan_types": list(K.ACCEPTED_BILAN_TYPES),
                  "confidentiality": list(K.ACCEPTED_CONFIDENTIALITY), "min_revenue": K.MIN_REVENUE_EUR},
-        "count": len(rows), "stats": stats,
+        "count": len(rows), "stats": stats, "dropped_after_selection": dropped, "sources_map": SOURCES,
         "market": {"rates": mkt["rates"], "erp": mkt["erp"], "ratings": mkt["ratings"],
                    "betas_source": {k2: mkt["betas"].get(k2) for k2 in ("source", "region", "date", "live")},
                    "multiples_source": {k2: mkt["multiples"].get(k2) for k2 in ("source", "region", "date", "live")},

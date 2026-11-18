@@ -20,6 +20,7 @@
     <a href="#carte" data-view="map">Map</a>
     <a href="#liste" data-view="list">List</a>
     <a href="#analyse" data-view="co">Analysis</a>
+    <a href="#quality" data-view="quality">Data quality</a>
   </nav>
   <div class="fresh" id="fresh"></div>
   <button class="ghost icon" id="methodBtn" aria-label="Method and sources">?</button>
@@ -65,8 +66,12 @@
 
   <section class="view" id="v-list" aria-label="List" hidden>
     <div class="summary" id="summary"></div>
-    <div class="tablebar"><span id="sortNote"></span><button class="ghost" id="csvBtn">Export the list (CSV)</button></div>
+    <div class="tablebar"><span><span class="key rep">Reported in the filing</span> <span class="key est">Model estimate</span> <span id="sortNote"></span></span><button class="ghost" id="csvBtn">Export the list (CSV)</button></div>
     <div class="table" id="table" role="table" aria-label="Companies"><div class="thead" id="thead" role="row"></div><div class="tbody" id="tbody"></div></div>
+  </section>
+
+  <section class="view" id="v-quality" aria-label="Data quality" hidden>
+    <div id="quality"></div>
   </section>
 
   <section class="view" id="v-co" aria-label="Analysis" hidden>

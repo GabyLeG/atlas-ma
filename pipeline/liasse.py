@@ -40,6 +40,25 @@ def all_codes():
     return sorted(set(out))
 
 
+# Where each published figure comes from, shown next to the figure in the app (forms 2050 to 2053).
+SOURCES = {
+    "revenue": {"label": "Revenue", "form": "2052", "formula": "FL"},
+    "ebitda": {"label": "EBITDA (EBE)", "form": "2052", "formula": "FL + FM + FN + FO − (FS + FT + FU + FV + FW + FX + FY + FZ)"},
+    "da": {"label": "Depreciation", "form": "2052", "formula": "GA"},
+    "ebit": {"label": "Operating profit (EBIT)", "form": "2052", "formula": "GG"},
+    "interest": {"label": "Interest paid", "form": "2052", "formula": "GR"},
+    "income_tax": {"label": "Income tax", "form": "2053", "formula": "HK"},
+    "net_income": {"label": "Net income", "form": "2053", "formula": "HN"},
+    "equity": {"label": "Shareholders' equity", "form": "2051", "formula": "DL"},
+    "fin_debt": {"label": "Financial debt", "form": "2051", "formula": "DS + DT + DU + DV"},
+    "cash": {"label": "Cash and securities", "form": "2050", "formula": "(CD − CE) + (CF − CG)"},
+    "bfr": {"label": "Operating working capital", "form": "2050 / 2051",
+            "formula": "net stocks (BL…BU) + net receivables (BX − BY) − trade payables (DX) − tax and social payables (DY)"},
+    "fixed_assets_net": {"label": "Net fixed assets", "form": "2050", "formula": "BJ − BK"},
+    "total_assets": {"label": "Balance-sheet total", "form": "2051", "formula": "EE"},
+    "wages": {"label": "Wages and social charges", "form": "2052", "formula": "FY + FZ"},
+}
+
 TOL_ABS = 2_000      # EUR: rounding in filings
 TOL_REL = 0.01
 

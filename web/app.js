@@ -326,18 +326,18 @@
     { k: "n", l: "Company", w: "270px", name: true },
     { k: "r", l: "Revenue", w: "92px", f: money }, { k: "e", l: "EBITDA", w: "92px", f: money },
     { k: "m", l: "Margin", w: "76px", f: (v) => pct(v) }, { k: "g", l: "Growth", w: "84px", f: (v) => pct(v, 1, true), c: true },
-    { k: "nd", l: "Net debt", w: "92px", f: money }, { k: "evd", l: "EV · DCF", w: "92px", f: money },
-    { k: "evm", l: "EV · multiple", w: "104px", f: money }, { k: "ev", l: "EV · central", w: "100px", f: money },
-    { k: "x", l: "EV / EBITDA", w: "92px", f: mult }, { k: "gap", l: "DCF vs mult.", w: "96px", f: (v) => (v === null ? "–" : Math.abs(v) > 3 ? "n.m." : pct(v, 0, true)), c: true },
-    { k: "irr", l: "LBO IRR", w: "80px", f: (v) => (v === null ? "–" : v <= -1 ? "loss" : pct(v, 0)), c: true },
-    { k: "sc", l: "Score", w: "70px", pill: true }, { k: "cl", l: "Accounts to", w: "104px", f: date }, { k: "fd", l: "Filed", w: "104px", f: date },
+    { k: "nd", l: "Net debt", w: "92px", f: money }, { k: "evd", l: "EV · DCF", w: "92px", f: money, est: true },
+    { k: "evm", l: "EV · multiple", w: "104px", f: money, est: true }, { k: "ev", l: "EV · central", w: "100px", f: money, est: true },
+    { k: "x", l: "EV / EBITDA", w: "92px", f: mult, est: true }, { k: "gap", l: "DCF vs mult.", w: "96px", f: (v) => (v === null ? "–" : Math.abs(v) > 3 ? "n.m." : pct(v, 0, true)), c: true, est: true },
+    { k: "irr", l: "LBO IRR", w: "80px", f: (v) => (v === null ? "–" : v <= -1 ? "loss" : pct(v, 0)), c: true, est: true },
+    { k: "sc", l: "Score", w: "70px", pill: true, est: true }, { k: "cl", l: "Accounts to", w: "104px", f: date }, { k: "fd", l: "Filed", w: "104px", f: date },
   ];
   let ORDER = [];
   const ROW = 40;
   function initList() {
     const th = $("thead");
     document.documentElement.style.setProperty("--cols", COLS.map((c) => c.w).join(" "));
-    th.innerHTML = COLS.map((c) => `<div class="th ${c.name ? "" : "r"}" role="columnheader" data-k="${c.k}">${c.l}</div>`).join("");
+    th.innerHTML = COLS.map((c) => `<div class="th ${c.name ? "" : "r"} ${c.est ? "est" : ""}" role="columnheader" data-k="${c.k}" title="${c.est ? "Model estimate, not a market price" : "Reported in the latest filing"}">${c.l}</div>`).join("");
     th.querySelectorAll(".th").forEach((el) => (el.onclick = () => {
       const k = el.dataset.k;
       S.sort = S.sort.key === k ? { key: k, dir: -S.sort.dir } : { key: k, dir: k === "n" || k === "x" ? 1 : -1 };
@@ -380,9 +380,9 @@
       const i = ORDER[j];
       h += `<div class="tr" role="row" data-s="${U.s[i]}" style="top:${j * ROW}px">` + COLS.map((c) => {
         if (c.name) return `<div class="td name"><b>${esc(U.n[i])}</b><span class="sub">${esc(sectorName(U.d[i]))} · ${esc(U.dep[i] || "")} ${esc(U.c[i] || "")}</span></div>`;
-        if (c.pill) return `<div class="td r">${scorePill(U.sc[i])}</div>`;
+        if (c.pill) return `<div class="td r est">${scorePill(U.sc[i])}</div>`;
         const v = (U[c.k] || [])[i];
-        return `<div class="td num r ${c.c ? cls(v) : ""}">${c.f(v)}</div>`;
+        return `<div class="td num r ${c.c ? cls(v) : ""} ${c.est ? "est" : ""}">${c.f(v)}</div>`;
       }).join("") + "</div>";
     }
     body.innerHTML = h || `<div class="empty">No company matches these filters.</div>`;
@@ -414,10 +414,12 @@
     const h = location.hash.slice(1);
     let view = "map";
     if (h === "liste") view = "list";
+    else if (h === "quality") view = "quality";
     else if (h.startsWith("analyse")) view = "co";
-    $("v-map").hidden = view !== "map"; $("v-list").hidden = view !== "list"; $("v-co").hidden = view !== "co";
+    $("v-map").hidden = view !== "map"; $("v-list").hidden = view !== "list"; $("v-co").hidden = view !== "co"; $("v-quality").hidden = view !== "quality";
     document.querySelectorAll(".tabs a").forEach((a) => a.classList.toggle("on", a.dataset.view === view));
-    document.body.classList.toggle("wide", view === "co");
+    document.body.classList.toggle("wide", view === "co" || view === "quality");
+    if (view === "quality") renderQuality();
     if (view === "map") requestAnimationFrame(resize);
     if (view === "list") requestAnimationFrame(paintRows);
     if (view === "co") openCompany(h.slice(8));
@@ -486,25 +488,26 @@
         <span class="chip">Headcount <b>${esc(size)}</b></span>${U.cr[i] ? `<span class="chip">Founded <b>${U.cr[i]}</b></span>` : ""}
         <span class="chip"><i class="dot"></i>Accounts to <b>${date(U.cl[i])}</b></span></div></div>
         <div class="actions"><button class="ghost" id="resetP">Reset assumptions</button><button class="primary" id="xlsBtn">Download the Excel model</button></div></div>
-      <div class="kpis" id="kpis"></div>
+      <div id="kpis"></div>
       <div class="grid2">
         <div class="stack">
-          <div class="panel"><h2>Valuation range</h2><p class="hint">Enterprise value by method. DCF shown with the cost of capital ±1 point, multiples ±2x.</p><div id="ff"></div></div>
+          <div class="panel"><h2>Reported figures <span class="badge rep">From the filings</span></h2><p class="hint">Exactly as filed with INPI, €k. Each line shows the tax-return lines it comes from, so it can be checked against the official PDF.</p><div class="scroll" id="repT"></div></div>
+          <div class="panel estp"><h2>Valuation range <span class="badge est">Model estimate</span></h2><p class="hint">Enterprise value by method. DCF shown with the cost of capital ±1 point, multiples ±2x.</p><div id="ff"></div></div>
           <div class="panel"><h2>Reported history</h2><p class="hint">Revenue and EBITDA as filed with INPI; margin as a line.</p><div id="hist"></div></div>
-          <div class="panel"><h2>Discounted cash flows</h2><p class="hint">${META.defaults.years}-year projection, €k. FCFF = operating profit after tax + depreciation − capex − change in working capital.</p><div class="scroll" id="dcfT"></div></div>
+          <div class="panel estp"><h2>Discounted cash flows <span class="badge est">Model estimate</span></h2><p class="hint">${META.defaults.years}-year projection, €k. FCFF = operating profit after tax + depreciation − capex − change in working capital.</p><div class="scroll" id="dcfT"></div></div>
         </div>
         <div class="stack">
           <div class="panel"><h2>Source and verification</h2><div id="proof"></div></div>
-          <div class="panel"><h2>Assumptions</h2><p class="hint">Today's values by default. Move a slider and everything recalculates.</p><div class="params" id="params"></div></div>
-          <div class="panel"><h2>Cost of capital (WACC)</h2><div id="waccT"></div></div>
-          <div class="panel"><h2>LBO test</h2><p class="hint">Bought at the multiple value, debt of ${NF1.format(META.defaults.lbo_leverage)}x EBITDA at Euribor + ${pct(META.defaults.lbo_margin, 1)}, exit after ${META.defaults.lbo_years} years at the same multiple.</p><div id="lboT"></div></div>
+          <div class="panel estp"><h2>Assumptions <span class="badge est">Model inputs</span></h2><p class="hint">Today's values by default. Move a slider and everything recalculates.</p><div class="params" id="params"></div></div>
+          <div class="panel estp"><h2>Cost of capital (WACC) <span class="badge est">Model estimate</span></h2><div id="waccT"></div></div>
+          <div class="panel estp"><h2>LBO test <span class="badge est">Model estimate</span></h2><p class="hint">Bought at the multiple value, debt of ${NF1.format(META.defaults.lbo_leverage)}x EBITDA at Euribor + ${pct(META.defaults.lbo_margin, 1)}, exit after ${META.defaults.lbo_years} years at the same multiple.</p><div id="lboT"></div></div>
           <div class="panel"><h2>Comparable companies</h2><p class="hint">Same NAF division, closest size.</p><div id="peers"></div></div>
           <div class="panel"><h2>Market data</h2><ul class="src" id="srcs"></ul></div>
         </div>
       </div>`;
     $("resetP").onclick = () => { CO.P = {}; renderParams(); update(); };
     $("xlsBtn").onclick = () => AtlasExcel.export({ name: U.n[i], siren: U.s[i], naf: U.naf[i], sector: sec, closing: U.cl[i], proof: CO.proof, years: CO.years, c: CO.c, hist: CO.hist, v: compute(), meta: META });
-    renderProof(fy); renderParams(); update(); renderHistory(); renderPeers(); renderSources();
+    renderProof(fy); renderReported(); renderParams(); update(); renderHistory(); renderPeers(); renderSources();
   }
   function renderProof(fy) {
     const p = CO.proof || {}, cl = U.cl[CO.i];
@@ -548,14 +551,21 @@
     const v = compute(), c = CO.c;
     const lo = compute({ wacc_shift: 0.01 }), hi = compute({ wacc_shift: -0.01 });
     const nd = v.net_debt, fy = "FY" + U.cl[CO.i].slice(0, 4);
-    $("kpis").innerHTML = [
-      ["Revenue", eur(c.revenue), "reported · " + fy],
-      ["EBITDA", eur(c.ebitda), "reported · margin " + pct(c.ebitda / c.revenue)],
-      ["Revenue growth", pct(v.dcf.g0, 1, true), "per year, reported history"],
-      ["Net debt", eur(nd), "reported" + (c.ebitda > 0 ? " · " + mult(nd / c.ebitda) + " EBITDA" : "")],
-      ["Enterprise value", eur(v.ev), "estimate" + (v.ev && c.ebitda > 0 ? " · " + mult(v.ev / c.ebitda) + " EBITDA" : ""), true],
-      ["Equity value", eur(v.equity), "estimate · EV − net debt"],
-    ].map(([l, b, s, hero]) => `<div class="kpi ${hero ? "hero" : ""}"><span>${l}</span><b>${b}</b><small>${s}</small></div>`).join("");
+    const SM = META.sources_map || {};
+    const src = (k) => (SM[k] ? `${SM[k].label}: form ${SM[k].form}, line(s) ${SM[k].formula}` : "");
+    const tile = ([l, b, s, title, cls]) => `<div class="kpi ${cls || ""}" ${title ? `title="${esc(title)}"` : ""}><span>${l}</span><b>${b}</b><small>${s}</small></div>`;
+    const repT = [
+      ["Revenue", eur(c.revenue), fy, src("revenue")],
+      ["EBITDA", eur(c.ebitda), "margin " + pct(c.ebitda / c.revenue), src("ebitda")],
+      ["Revenue growth", pct(v.dcf.g0, 1, true), "between the two filings", "Computed from the reported revenue of the verified years"],
+      ["Net debt", eur(nd), c.ebitda > 0 ? mult(nd / c.ebitda) + " EBITDA" : "", "Financial debt (" + (SM.fin_debt ? SM.fin_debt.formula : "") + ") − cash (" + (SM.cash ? SM.cash.formula : "") + ")"],
+    ];
+    const estT = [
+      ["Enterprise value", eur(v.ev), v.ev && c.ebitda > 0 ? mult(v.ev / c.ebitda) + " EBITDA" : "", "Average of the DCF and the sector multiple. Model estimate, not a market price.", "est hero"],
+      ["Equity value", eur(v.equity), "EV − net debt", "Model estimate, not a market price.", "est"],
+    ];
+    $("kpis").innerHTML = `<div class="kpis2"><div class="kgroup"><span class="glabel">Reported · ${fy} filing</span><div class="krow">${repT.map(tile).join("")}</div></div>
+      <div class="kgroup estg"><span class="glabel">Model estimates · not market prices</span><div class="krow">${estT.map(tile).join("")}</div></div></div>`;
     football(v, lo, hi); dcfTable(v); waccTable(v); lboTable(v);
     return v;
   }
@@ -675,6 +685,67 @@
       `Company identity, sector (NAF) and head office: INSEE SIRENE register.`,
     ];
     $("srcs").innerHTML = items.map((x) => `<li>${x}</li>`).join("") + (m.warnings.length ? `<li style="color:var(--neg)">Fallback values used: ${esc(m.warnings.join("; "))}</li>` : "");
+  }
+
+  function renderReported() {
+    const SM = META.sources_map || {}, ys = CO.years.slice(-2);
+    const rows = ["revenue", "ebitda", "da", "ebit", "interest", "net_income", "equity", "fin_debt", "cash", "bfr", "fixed_assets_net", "total_assets"];
+    $("repT").innerHTML = `<table class="fin"><tr><th>Figure</th>${ys.map((y) => `<th>FY${y.closing.slice(0, 4)}</th>`).join("")}<th style="text-align:left">Source in the tax return</th></tr>
+      ${rows.map((k) => `<tr><td>${esc(SM[k] ? SM[k].label : k)}</td>${ys.map((y) => `<td>${k0(y[k])}</td>`).join("")}<td class="src">${SM[k] ? `Form ${esc(SM[k].form)} · ${esc(SM[k].formula)}` : ""}</td></tr>`).join("")}</table>`;
+  }
+
+  const REASONS = {
+    latest_accounts_missing: "Latest due accounts not filed, or not yet keyed in by INPI",
+    not_verified_by_inpi_api: "Not yet checked against the INPI API (daily quota)",
+    inpi_entry_anomaly: "INPI flagged an inconsistency, missing data or did not key in the accounts",
+    confidential: "Confidential accounts", not_12_months: "Financial year not 12 months long", not_eur: "Not in euros",
+    not_full_regime: "Simplified accounts only", deleted: "Filing withdrawn",
+    accounting_checks: "Failed the accounting checks", below_revenue_floor: "Revenue below the €2m floor",
+    previous_year_missing: "Previous year's accounts missing", previous_year_not_consecutive: "Previous year missing from the INPI API or not consecutive",
+    previous_year_not_verified: "Previous year not verified by the INPI API", previous_year_accounting_checks: "Previous year failed the accounting checks",
+    years_do_not_match: "The two years disagree (restated accounts or keying error)",
+    no_public_identity: "Company closed, not public in SIRENE, or sole trader", excluded_sector: "Excluded sector (holdings, finance, insurance, public bodies)",
+  };
+  const reasonLabel = (k) => REASONS[k] || (k.startsWith("previous_year_") ? "Previous year: " + (REASONS[k.slice(14)] || k.slice(14)).toLowerCase() : k);
+  const CHECKS = { revenue_missing: "No revenue line", operating_income_sum: "Operating income does not add up", operating_charges_sum: "Operating charges do not add up",
+    operating_result: "Operating profit ≠ income − charges", balance_sheet: "Balance sheet does not balance", net_income_bs_vs_pl: "Net income differs between balance sheet and P&L" };
+  function renderQuality() {
+    const st = META.stats || {}, api = st.inpi_api || {}, rej = Object.assign({}, st.rejected || {}, META.dropped_after_selection || {});
+    const box = $("quality");
+    if (META.sample) {
+      box.innerHTML = `<div class="panel"><h2>Data quality</h2><p class="hint">This preview runs on fictional sample data. On the live site this page shows, after every nightly update, how many companies were checked, how many were left out and why, and how many filings failed each accounting check.</p></div>`;
+      return;
+    }
+    const cand = st.candidates || 0, shown = META.count || 0;
+    const entries = Object.entries(rej).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+    const max = Math.max(1, ...entries.map(([, n]) => n));
+    const bar = (label, n, tot, good) => `<div class="qbar"><span>${esc(label)}</span><div class="track"><div class="fill ${good ? "good" : ""}" style="width:${Math.max(0.5, (100 * n) / tot)}%"></div></div><b>${NF0.format(n)}</b></div>`;
+    const checks = Object.entries(st.check_failures || {}).sort((a, b) => b[1] - a[1]);
+    const cov = api.coverage;
+    box.innerHTML = `
+      <div class="cohead"><div><h1>Data quality</h1><p class="hint" style="margin:6px 0 0">What was checked in the last update (${date(META.built_at.slice(0, 10))}), what was left out, and why. Nothing is shown unless it passed every rule.</p></div></div>
+      <div class="kpis2" style="grid-template-columns:1fr"><div class="krow">
+        <div class="kpi"><span>Candidate companies</span><b>${NF0.format(cand)}</b><small>full-regime public filers, revenue ≥ €1.5m</small></div>
+        <div class="kpi"><span>Checked against the INPI API</span><b>${cov === undefined || cov === null ? "–" : pct(cov, 0)}</b><small>${api.checked !== undefined ? NF0.format(api.checked) + " companies" : META.verification === "open_data" ? "API not connected" : ""}</small></div>
+        <div class="kpi"><span>Verified and shown</span><b>${NF0.format(shown)}</b><small>${cand ? pct(shown / cand, 1) + " of candidates" : ""}</small></div>
+        <div class="kpi"><span>Accounts closed after</span><b>${date(META.cutoff)}</b><small>older ones are missing due accounts</small></div>
+      </div></div>
+      <div class="grid2">
+        <div class="panel"><h2>Why companies are left out</h2><p class="hint">Each company is counted once, at the first rule it fails.</p>
+          <div class="qbars">${bar("Verified and shown", shown, Math.max(max, shown), true)}${entries.map(([k, n]) => bar(reasonLabel(k), n, Math.max(max, shown))).join("")}</div></div>
+        <div class="stack">
+          <div class="panel"><h2>Rules every company must pass</h2><ul class="checks">
+            <li><span class="okc">✓</span><div>Latest due accounts filed<small>Last year-end after ${date(META.cutoff)}: accounts are due 8 months after year-end.</small></div></li>
+            <li><span class="okc">✓</span><div>Two consecutive years, both verified<small>From the official INPI API: public, full regime, 12 months, euros, keyed in with no anomaly.</small></div></li>
+            <li><span class="okc">✓</span><div>The two years confirm each other<small>Last year's revenue, net income, equity and balance-sheet total, as printed in this year's filing, match last year's filing.</small></div></li>
+            <li><span class="okc">✓</span><div>Accounting checks<small>Income and charges add up, operating profit = income − charges, balance sheet balances, net income consistent.</small></div></li>
+            <li><span class="okc">✓</span><div>Revenue of at least ${money(META.rule.min_revenue / 1000)}</div></li></ul></div>
+          <div class="panel"><h2>Accounting check failures</h2><p class="hint">Across all filings read in this update, including companies that were then left out.</p>
+            <table class="fin">${checks.map(([k, n]) => `<tr><td>${esc(CHECKS[k] || k)}</td><td>${NF0.format(n)}</td></tr>`).join("") || "<tr><td>None</td><td>0</td></tr>"}</table></div>
+          ${api.entry_codes ? `<div class="panel"><h2>INPI quality codes</h2><p class="hint">Code given by INPI to each filing it keyed in. Only code 0 (no anomaly) is accepted.</p>
+            <table class="fin">${Object.entries(api.entry_codes).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, n]) => `<tr><td>Code ${esc(k)}</td><td>${NF0.format(n)}</td></tr>`).join("")}</table></div>` : ""}
+        </div>
+      </div>`;
   }
 
   /* ---------- method ---------- */
