@@ -74,6 +74,27 @@ def norm_code(c):
     return str(int(c)) if c.isdigit() else c
 
 
+# Figures of the previous year printed in this filing, used to cross-check it against last year's own filing.
+# Income statement: total N-1 is m4 (lines split France/export are keyed by their first code, FJ for revenue).
+# Liabilities and the 2053 page: N-1 is m2.
+PREV = {"revenue": ("FJ", "m4", "FL"), "net_income": ("HN", "m2", None), "equity": ("DL", "m2", None), "total": ("EE", "m2", None)}
+
+
+def previous_year(record):
+    """{revenue, net_income, equity, total} for year N-1 as shown in this filing (None when blank)."""
+    out = {k: None for k in PREV}
+    detail = (((record.get("bilanSaisi") or {}).get("bilan") or {}).get("detail") or {})
+    for page in detail.get("pages") or []:
+        for l in page.get("liasses") or []:
+            code = (l.get("code") or "").strip()
+            for k, (c, col, alt) in PREV.items():
+                if code == c or (alt and code == alt and out[k] is None):
+                    v = amount(l.get(col))
+                    if v is not None:
+                        out[k] = v
+    return out
+
+
 def identity(record):
     ident = ((((record.get("bilanSaisi") or {}).get("bilan") or {}).get("identite")) or {})
     return {
@@ -118,7 +139,7 @@ class QuotaReached(RuntimeError):
 def compact(record, codes):
     """What the pipeline keeps from a filing: identity fields and the liasse codes it reads (a few hundred bytes)."""
     l = to_liasse(record)
-    return {"ident": identity(record), "l": {c: v for c, v in l.items() if c in codes}}
+    return {"ident": identity(record), "l": {c: v for c, v in l.items() if c in codes}, "p": previous_year(record)}
 
 
 class Client:

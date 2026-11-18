@@ -13,8 +13,9 @@ Les données se mettent à jour **chaque nuit** (GitHub Actions) : nouveaux dép
 Un acheteur demandera toujours les **derniers comptes**. Une société n'apparaît donc que si :
 1. **les derniers comptes exigibles sont déposés** : approbation sous 6 mois, dépôt sous 2 mois, donc les comptes d'un exercice sont dus 8 mois après la clôture. Une société dont la dernière clôture date de plus de 20 mois est en retard et n'apparaît pas ;
 2. ces comptes viennent de l'**API officielle de l'INPI**, sont **publics**, au **régime normal** (liasse complète), sur **12 mois**, en **euros**, et saisis par l'INPI **sans anomalie** (code qualité 0) ;
-3. ils passent les **contrôles comptables** (produits et charges qui s'additionnent, bilan équilibré, résultat cohérent) ;
-4. le chiffre d'affaires atteint **2 M€**.
+3. **les deux derniers exercices** sont déposés, vérifiés de la même façon, consécutifs, et **se confirment** : les chiffres de l'an dernier imprimés dans les comptes de cette année (CA, résultat, capitaux propres, total du bilan) doivent être identiques à ceux du dépôt de l'an dernier ; seuls ces deux exercices vérifiés sont affichés ;
+4. ils passent les **contrôles comptables** (produits et charges qui s'additionnent, bilan équilibré, résultat cohérent) ;
+5. le chiffre d'affaires atteint **2 M€**.
 
 Chaque fiche affiche la date de dépôt, les contrôles passés et un lien vers le dépôt officiel sur data.inpi.fr. Les chiffres publiés (CA, EBITDA, dette, trésorerie) sont repris tels quels ; la valeur d'entreprise, la valeur des fonds propres et le TRI sont des estimations du modèle.
 

@@ -10,14 +10,16 @@ def z(v):
     return ("-" if v < 0 else "") + str(abs(int(v))).zfill(15)
 
 
-def record(liasse=LIASSE, **ident):
+def record(liasse=LIASSE, prev=None, **ident):
+    """prev: last year's {FL, HN, DL, EE} as printed in this filing's N-1 column."""
     l = liasse
+    pv = prev or {}
     assets = [("BJ", "BK"), ("BL", "BM"), ("BN", "BO"), ("BP", "BQ"), ("BR", "BS"), ("BT", "BU"), ("BX", "BY"), ("CD", "CE"), ("CF", "CG"), ("CO", "1A")]
     p1 = [{"code": g, "m1": z(l.get(g, 0)), "m2": z(l.get(a, 0)), "m3": z(l.get(g, 0) - l.get(a, 0)), "m4": ""} for g, a in assets if g in l]
-    p2 = [{"code": c, "m1": z(v), "m2": "", "m3": "", "m4": ""} for c, v in l.items() if c[0] in "DE"]
-    p3 = [{"code": "FJ", "m1": z(l["FL"] - 1_000_000), "m2": z(1_000_000), "m3": z(l["FL"]), "m4": ""}]
+    p2 = [{"code": c, "m1": z(v), "m2": z(pv[c]) if c in pv else "", "m3": "", "m4": ""} for c, v in l.items() if c[0] in "DE"]
+    p3 = [{"code": "FJ", "m1": z(l["FL"] - 1_000_000), "m2": z(1_000_000), "m3": z(l["FL"]), "m4": z(pv["FL"]) if "FL" in pv else ""}]
     p3 += [{"code": c, "m1": "", "m2": "", "m3": z(v), "m4": ""} for c, v in l.items() if c[0] in "FG" and c != "FL"]
-    p4 = [{"code": c, "m1": z(v), "m2": "", "m3": "", "m4": ""} for c, v in l.items() if c[0] == "H"]
+    p4 = [{"code": c, "m1": z(v), "m2": z(pv[c]) if c in pv else "", "m3": "", "m4": ""} for c, v in l.items() if c[0] == "H"]
     idn = {"siren": "123456789", "dateClotureExercice": "2025-12-31", "dureeExerciceN": "12", "codeSaisie": "0",
            "codeConfidentialite": "0", "codeDevise": "EUR", "codeTypeBilan": "C", "dateDepot": "2026-06-30"}
     idn.update(ident)
@@ -57,24 +59,48 @@ def test_reliability_rules():
     assert "not_full_regime" in inpi.reliability(inpi.identity(record(codeTypeBilan="S")))
 
 
-def test_add_inpi_replaces_open_data_year_and_flags_problems():
-    import datetime as dt
+LAST_YEAR = dict(LIASSE, FL=9_000_000, FR=9_100_000, FS=1_000_000, GF=8_320_000, HN=400_000, DI=400_000, DL=2_600_000)
+
+
+def run(*recs):
+    import datetime as dt, tempfile, pathlib
     from pipeline.companies import add_inpi, build_statements
 
     class Fake:
-        calls = 3
-        quota_hit = False
+        calls, quota_hit = 3, False
         def batches(self, sirens, date_from):
-            yield list(sirens), [record(), record(dateClotureExercice="2024-12-31", codeSaisie="1A")]
-    f = {"123456789": [(dt.date(2024, 12, 31), dict(LIASSE, FL=9_000_000, FR=9_100_000), {"source": "open_data"})]}
-    import tempfile, pathlib
+            yield list(sirens), list(recs)
+    f = {"123456789": [(dt.date(2023, 12, 31), LAST_YEAR, {"source": "open_data"})]}
     cache = pathlib.Path(tempfile.mkdtemp()) / "inpi.json.gz"
     st = add_inpi(f, Fake(), dt.date(2026, 11, 17), log=lambda *_: None, cache_path=cache)
-    assert st["used"] == 2 and st["problems"] == {"inpi_entry_anomaly": 1}
-    out, _ = build_statements(f, dt.date(2026, 11, 17), require_api=True, log=lambda *_: None)
+    out, sel = build_statements(f, dt.date(2026, 11, 17), require_api=True, log=lambda *_: None)
+    return st, out, sel["rejected"]
+
+
+MATCH = {"FL": 9_000_000, "HN": 400_000, "DL": 2_600_000, "EE": 7_000_000}
+
+
+def test_previous_year_read_from_filing():
+    assert inpi.previous_year(record(prev=MATCH)) == {"revenue": 9e6, "net_income": 4e5, "equity": 2.6e6, "total": 7e6}
+
+
+def test_two_verified_years_that_confirm_each_other_are_kept():
+    st, out, rej = run(record(prev=MATCH), record(LAST_YEAR, dateClotureExercice="2024-12-31", dateDepot="2025-06-30"))
     co = out["123456789"]
-    assert co["proof"]["source"] == "inpi_api" and co["proof"]["filed"] == "2026-06-30"
-    assert [h["closing"] for h in co["history"]] == ["2025-12-31"]   # the flagged 2024 filing is left out of history
+    assert co["proof"]["prev_closing"] == "2024-12-31" and co["proof"]["filed"] == "2026-06-30"
+    assert [h["closing"] for h in co["history"]] == ["2024-12-31", "2025-12-31"]   # open-data 2023 left out: only verified years
+
+
+def test_years_that_disagree_are_rejected():
+    _, out, rej = run(record(prev=dict(MATCH, FL=9_500_000)), record(LAST_YEAR, dateClotureExercice="2024-12-31"))
+    assert out == {} and rej == {"years_do_not_match": 1}
+
+
+def test_previous_year_must_be_verified_too():
+    _, out, rej = run(record(prev=MATCH), record(LAST_YEAR, dateClotureExercice="2024-12-31", codeSaisie="1A"))
+    assert out == {} and rej == {"previous_year_inpi_entry_anomaly": 1}
+    _, out, rej = run(record(prev=MATCH))                       # 2024 only in open data
+    assert out == {} and rej == {"previous_year_not_consecutive": 1}
 
 
 def test_cache_resumes_after_quota(tmp_path):
@@ -102,7 +128,8 @@ def test_cache_resumes_after_quota(tmp_path):
     assert st["checked"] == 1 and st["quota_hit"]
     full = Full()
     st2 = add_inpi(dict(f), full, today, log=lambda *_: None, cache_path=cache)
-    assert full.asked == [(["987654321"], "2025-03-17")]     # only the company not yet fetched
+    # window = two years of filings: 1st of the month one year before the cutoff (17 Mar 2025 -> 1 Mar 2024)
+    assert full.asked == [(["987654321"], "2024-03-01")]     # only the company not yet fetched
     assert st2["checked"] == 2 and st2["used"] == 1           # the first company's filing came from the cache
     full2 = Full()
     add_inpi(dict(f), full2, dt.date(2026, 11, 18), log=lambda *_: None, cache_path=cache)

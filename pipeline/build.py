@@ -243,6 +243,7 @@ def sample_data(n=1600, seed=7):
                          "total_assets": yr_rev * rnd.uniform(0.6, 1.2), "wages": yr_rev * rnd.uniform(0.2, 0.45)})
         companies[siren] = {"closing": hist[-1]["closing"], "history": hist,
                             "proof": {"source": "sample", "closing": hist[-1]["closing"], "filed": "2026-06-30", "months": "12", "entry_code": "0",
+                                      "prev_closing": hist[-2]["closing"], "prev_filed": "2025-06-30", "cross_checked": ["revenue", "net_income", "equity", "total"],
                                       "checks": ["operating_income_sum", "operating_charges_sum", "operating_result", "balance_sheet", "net_income_bs_vs_pl"]}, "latest": {k2: v for k2, v in hist[-1].items() if k2 != "closing"}}
         code, nom, lon, lat = dep
         ids[siren] = {"name": f"Société fictive {i + 1:04d}", "naf": f"{div}.{rnd.randint(10, 99)}Z", "created": f"{rnd.randint(1960, 2019)}-01-01",

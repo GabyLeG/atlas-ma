@@ -105,6 +105,9 @@ def _save_cache(path, cache):
     tmp.replace(path)
 
 
+CACHE_VERSION = 2
+
+
 def add_inpi(filings, client, today=None, log=print, cache_path=None):
     """Merge the INPI API filings into `filings`, through a cache kept between runs (GitHub Actions cache).
 
@@ -118,8 +121,11 @@ def add_inpi(filings, client, today=None, log=print, cache_path=None):
     today = today or K.TODAY
     cache_path = cache_path or (K.CACHE / "inpi.json.gz")
     cache = _load_cache(cache_path)
+    if cache.get("version") != CACHE_VERSION:          # format changed (v2 keeps last year's figures): start again
+        cache = {"version": CACHE_VERSION}
     codes = set(all_codes())
-    window_from = cache.get("window_from") or K.cutoff_date(today).isoformat()
+    c0 = K.cutoff_date(today)
+    window_from = cache.get("window_from") or dt.date(c0.year - 1, c0.month, 1).isoformat()   # two years of filings
     cache.setdefault("window_from", window_from)
     recs = cache.setdefault("records", {})          # siren -> {closing: compact record}
     done = set(cache.get("done", []))
@@ -170,7 +176,7 @@ def add_inpi(filings, client, today=None, log=print, cache_path=None):
                 stats["problems"][p] = stats["problems"].get(p, 0) + 1
             d = dt.date.fromisoformat(closing)
             meta = {"source": "inpi_api", "filed": idn["filed"], "inpi_id": idn["id"], "entry_code": inpi.norm_code(idn["entry_code"]),
-                    "months": idn["months"], "problems": probs}
+                    "months": idn["months"], "problems": probs, "prev": c.get("p") or {}}
             rows = [r for r in filings[siren] if r[0] != d]     # the API version replaces the open-data one
             rows.append((d, c["l"], meta))
             filings[siren] = sorted(rows, key=lambda r: r[0])
@@ -185,8 +191,24 @@ def add_inpi(filings, client, today=None, log=print, cache_path=None):
     return stats
 
 
+def _close(a, b):
+    return a is not None and b is not None and abs(a - b) <= max(2_000, 0.01 * max(abs(a), abs(b)))
+
+
+def cross_check(latest_meta, prev_statement):
+    """Last year's figures as printed in this year's filing must match last year's own filing.
+    Returns the list of figures that do not match (empty = confirmed by both filings)."""
+    p = latest_meta.get("prev") or {}
+    pairs = {"revenue": prev_statement.revenue, "net_income": prev_statement.net_income,
+             "equity": prev_statement.equity, "total": prev_statement.total_assets}
+    return [k for k, v in pairs.items() if not _close(p.get(k), v)]
+
+
 def build_statements(filings, today=None, require_api=False, log=print):
-    """Apply the inclusion rule. Returns ({siren: {"closing", "history", "latest", "proof"}}, stats)."""
+    """Apply the inclusion rule. Returns ({siren: {"closing", "history", "latest", "proof"}}, stats).
+
+    With the INPI API (require_api=True), the rule is strict: the two latest years must both be verified
+    INPI filings, consecutive, and confirm each other; only those two verified years are shown."""
     today = today or K.TODAY
     cutoff = K.cutoff_date(today)
     stats = {"candidates": len(filings), "kept": 0, "cutoff": cutoff.isoformat(), "rejected": {}, "check_failures": {}}
@@ -199,8 +221,10 @@ def build_statements(filings, today=None, require_api=False, log=print):
             for c in s.checks_failed:
                 stats["check_failures"][c] = stats["check_failures"].get(c, 0) + 1
             hist.append((d, s, meta))
+        if not hist:
+            continue
         d_last, s_last, m_last = hist[-1]
-        reason = None
+        reason, prev = None, None
         if d_last < cutoff:
             reason = "latest_accounts_missing"        # newer accounts are legally due but not filed (or not yet keyed in)
         elif require_api and m_last["source"] != "inpi_api":
@@ -211,13 +235,33 @@ def build_statements(filings, today=None, require_api=False, log=print):
             reason = "accounting_checks"
         elif s_last.revenue < K.MIN_REVENUE_EUR:
             reason = "below_revenue_floor"
+        elif require_api:
+            prev = hist[-2] if len(hist) >= 2 else None
+            if prev is None:
+                reason = "previous_year_missing"
+            elif not (330 <= (d_last - prev[0]).days <= 400):
+                reason = "previous_year_not_consecutive"
+            elif prev[2]["source"] != "inpi_api":
+                reason = "previous_year_not_verified"
+            elif prev[2].get("problems"):
+                reason = "previous_year_" + prev[2]["problems"][0]
+            elif not usable(prev[1]):
+                reason = "previous_year_accounting_checks"
+            elif cross_check(m_last, prev[1]):
+                reason = "years_do_not_match"            # restated accounts or keying error: not trusted
         if reason:
             rej[reason] = rej.get(reason, 0) + 1
             continue
-        clean = [(d, s, m) for d, s, m in hist if usable(s) and not m.get("problems")]
+        if require_api:
+            clean = [hist[-2], hist[-1]]                 # only the two verified, cross-checked years
+        else:
+            clean = [(d, s, m) for d, s, m in hist if usable(s) and not m.get("problems")]
         proof = {"source": m_last["source"], "closing": d_last.isoformat(), "filed": m_last.get("filed"),
                  "inpi_id": m_last.get("inpi_id"), "entry_code": m_last.get("entry_code"), "months": m_last.get("months"),
                  "checks": ["operating_income_sum", "operating_charges_sum", "operating_result", "balance_sheet", "net_income_bs_vs_pl"]}
+        if prev:
+            proof.update({"prev_closing": prev[0].isoformat(), "prev_filed": prev[2].get("filed"),
+                          "prev_entry_code": prev[2].get("entry_code"), "cross_checked": ["revenue", "net_income", "equity", "total"]})
         out[siren] = {"closing": d_last.isoformat(), "proof": proof,
                       "history": [{"closing": d.isoformat(), **s.to_dict()} for d, s, _ in clean],
                       "latest": s_last.to_dict()}
